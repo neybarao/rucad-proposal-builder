@@ -249,6 +249,33 @@ function activeProposal() {
   return proposals.find((item) => item.id === activeId) || null;
 }
 
+function filenamePart(value, fallback = "Sem_nome") {
+  return String(value || fallback)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, "e")
+    .replace(/[^a-zA-Z0-9-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 48) || fallback;
+}
+
+function proposalPdfFilename(proposal) {
+  const number = filenamePart(String(proposal?.meta?.number || "").replace(/\//g, "-"), "0000-0000");
+  const client = filenamePart(proposal?.meta?.client, "Cliente");
+  return `${number}_${client}_Proposta_Rucad`;
+}
+
+function exportPdf() {
+  const proposal = activeProposal();
+  if (!proposal) return;
+  const previousTitle = document.title;
+  document.title = proposalPdfFilename(proposal);
+  window.print();
+  window.setTimeout(() => {
+    document.title = previousTitle;
+  }, 1000);
+}
+
 function normalizeInvestment(source, base) {
   const investment = source?.investment || {};
   if (Array.isArray(investment.tables)) {
@@ -644,6 +671,7 @@ function renderProposalList() {
         ${navLink("escopo", "Escopo", "#escopo")}
         ${navLink("investimento", "Investimento", "#investimento")}
         ${navLink("cronograma", "Cronograma", "#cronograma")}
+        ${navLink("gantt", "Gantt", "#gantt")}
         ${navLink("fechamento", "Fechamento", "#fechamento")}
       </div>
     </aside>
@@ -700,11 +728,14 @@ function renderTablePage(table, index, pageRows, options) {
           ${pageRows
             .map(
               (row) => `
-                <tr data-row="${row.id}">
+                <tr data-investment-row="${table.id}:${row.id}" draggable="true">
                   <td>${editable(row.item || "", `data-table-id="${table.id}" data-row="${row.id}" data-field="item"`, "editable cell-edit")}</td>
                   <td>${editableBlock(row.description || "", `data-table-id="${table.id}" data-row="${row.id}" data-field="description"`, "editable cell-edit rich-cell")}</td>
                   <td class="money-cell">${editable(currencyInput(row.value, row.label), `data-table-id="${table.id}" data-row="${row.id}" data-field="value"`, "editable cell-edit money-edit")}</td>
-                  <td class="row-tools"><button class="icon-btn" data-delete-row="${table.id}:${row.id}" title="Remover linha">×</button></td>
+                  <td class="row-tools schedule-tools">
+                    <span class="drag-handle" data-drag-row="${table.id}:${row.id}" title="Reordenar linha" draggable="true">⋮⋮</span>
+                    <button class="icon-btn" data-delete-row="${table.id}:${row.id}" title="Remover linha">×</button>
+                  </td>
                 </tr>
               `
             )
@@ -733,12 +764,15 @@ function renderScheduleRows(rows) {
   return rows
     .map(
       (row) => `
-        <tr data-schedule-row="${row.id}">
+        <tr data-schedule-row="${row.id}" draggable="true">
           <td>${editableBlock(row.task, `data-schedule="${row.id}" data-field="task"`, "editable cell-edit")}</td>
           <td>${editable(row.responsible, `data-schedule="${row.id}" data-field="responsible"`, "editable cell-edit")}</td>
           <td>${editable(row.start, `data-schedule="${row.id}" data-field="start"`, "editable cell-edit")}</td>
           <td>${editable(row.end, `data-schedule="${row.id}" data-field="end"`, "editable cell-edit")}</td>
-          <td class="row-tools"><button class="icon-btn" data-delete-schedule="${row.id}" title="Remover linha">×</button></td>
+          <td class="row-tools schedule-tools">
+            <span class="drag-handle" data-drag-schedule="${row.id}" title="Reordenar linha" draggable="true">⋮⋮</span>
+            <button class="icon-btn" data-delete-schedule="${row.id}" title="Remover linha">×</button>
+          </td>
         </tr>
       `
     )
@@ -859,6 +893,116 @@ function renderSchedulePages(proposal) {
   return chunkScheduleRows(proposal.schedule || [])
     .map((rows, index, pages) => renderSchedulePage(proposal, rows, index, pages.length))
     .join("");
+}
+
+function parseScheduleDate(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+  if (!match) return null;
+  const day = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const year = Number(match[3].length === 2 ? `20${match[3]}` : match[3]);
+  const date = new Date(year, month, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
+  return date;
+}
+
+function dateDiffDays(start, end) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  return Math.round((end - start) / dayMs);
+}
+
+function ganttItems(schedule) {
+  return (schedule || [])
+    .map((row) => {
+      const start = parseScheduleDate(row.start);
+      const end = parseScheduleDate(row.end);
+      if (!start || !end || end < start) return null;
+      return { ...row, startDate: start, endDate: end };
+    })
+    .filter(Boolean);
+}
+
+function formatGanttDate(date) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
+}
+
+function renderGanttRows(items, minDate, spanDays) {
+  return items
+    .map((item) => {
+      const offset = Math.max(0, dateDiffDays(minDate, item.startDate));
+      const duration = Math.max(1, dateDiffDays(item.startDate, item.endDate) + 1);
+      const left = (offset / spanDays) * 100;
+      const width = Math.max(4, (duration / spanDays) * 100);
+      return `
+        <div class="gantt-row">
+          <div class="gantt-label">
+            <strong>${escapeHtml(item.task || "Tarefa")}</strong>
+            <span>${escapeHtml(item.responsible || "Sem responsável")}</span>
+          </div>
+          <div class="gantt-track">
+            <div class="gantt-bar" style="left: ${left}%; width: ${Math.min(width, 100 - left)}%;">
+              <span>${formatGanttDate(item.startDate)} - ${formatGanttDate(item.endDate)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderGanttPage(proposal) {
+  const items = ganttItems(proposal.schedule);
+  const invalidCount = Math.max(0, (proposal.schedule || []).length - items.length);
+
+  if (!items.length) {
+    return `
+      <section class="page content-page" id="gantt">
+        ${pageBg()}
+        ${docTop(proposal)}
+        <section class="doc-section">
+          <h2>Gantt do Projeto</h2>
+          <div class="empty-gantt">Preencha início e término no cronograma para gerar o Gantt.</div>
+        </section>
+        ${docFoot()}
+      </section>
+    `;
+  }
+
+  const minDate = new Date(Math.min(...items.map((item) => item.startDate.getTime())));
+  const maxDate = new Date(Math.max(...items.map((item) => item.endDate.getTime())));
+  const spanDays = Math.max(1, dateDiffDays(minDate, maxDate) + 1);
+  const monthTicks = [];
+  const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  while (cursor <= maxDate) {
+    const offset = Math.max(0, dateDiffDays(minDate, cursor));
+    monthTicks.push({ label: cursor.toLocaleDateString("pt-BR", { month: "short" }), left: Math.min(100, (offset / spanDays) * 100) });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  return `
+    <section class="page content-page" id="gantt">
+      ${pageBg()}
+      ${docTop(proposal)}
+      <section class="doc-section gantt-section">
+        <h2>Gantt do Projeto</h2>
+        <div class="gantt-summary">
+          <span>${formatGanttDate(minDate)} - ${formatGanttDate(maxDate)}</span>
+          <strong>${spanDays} dias</strong>
+        </div>
+        <div class="gantt-chart">
+          <div class="gantt-scale">
+            <div></div>
+            <div class="gantt-months">
+              ${monthTicks.map((tick) => `<span style="left: ${tick.left}%;">${escapeHtml(tick.label)}</span>`).join("")}
+            </div>
+          </div>
+          ${renderGanttRows(items, minDate, spanDays)}
+        </div>
+        ${invalidCount ? `<p class="gantt-warning">${invalidCount} tarefa(s) sem datas válidas não aparecem no Gantt.</p>` : ""}
+      </section>
+      ${docFoot()}
+    </section>
+  `;
 }
 
 function renderGuaranteesPages(proposal) {
@@ -1011,6 +1155,8 @@ function renderDocument(proposal) {
 
         ${renderSchedulePages(proposal)}
 
+        ${renderGanttPage(proposal)}
+
         ${renderGuaranteesPages(proposal)}
 
         <section class="page content-page" id="fechamento">
@@ -1100,7 +1246,7 @@ function bind() {
       if (action === "new") await createProposal();
       if (action === "duplicate") await duplicateProposal();
       if (action === "delete") await deleteActiveProposal();
-      if (action === "print") window.print();
+      if (action === "print") exportPdf();
     });
   });
 
@@ -1234,6 +1380,62 @@ function bind() {
     });
   });
 
+  document.querySelectorAll("[data-investment-row]").forEach((rowNode) => {
+    rowNode.addEventListener("dragstart", (event) => {
+      if (!event.target.closest("[data-drag-row]")) {
+        event.preventDefault();
+        return;
+      }
+      rowNode.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", rowNode.dataset.investmentRow);
+    });
+
+    rowNode.addEventListener("dragend", () => {
+      rowNode.classList.remove("dragging");
+      document.querySelectorAll(".drop-target").forEach((target) => target.classList.remove("drop-target"));
+    });
+
+    rowNode.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      const draggedKey = event.dataTransfer.getData("text/plain");
+      const [draggedTableId, draggedRowId] = draggedKey.split(":");
+      const [targetTableId, targetRowId] = rowNode.dataset.investmentRow.split(":");
+      if (draggedTableId === targetTableId && draggedRowId !== targetRowId) {
+        rowNode.classList.add("drop-target");
+      }
+    });
+
+    rowNode.addEventListener("dragleave", () => {
+      rowNode.classList.remove("drop-target");
+    });
+
+    rowNode.addEventListener("drop", (event) => {
+      event.preventDefault();
+      rowNode.classList.remove("drop-target");
+      const draggedKey = event.dataTransfer.getData("text/plain");
+      const targetKey = rowNode.dataset.investmentRow;
+      if (!draggedKey || draggedKey === targetKey) return;
+      const [draggedTableId, draggedRowId] = draggedKey.split(":");
+      const [targetTableId, targetRowId] = targetKey.split(":");
+      if (draggedTableId !== targetTableId) return;
+      const proposal = activeProposal();
+      const table = proposal.investment.tables.find((item) => item.id === draggedTableId);
+      if (!table) return;
+      const fromIndex = table.rows.findIndex((row) => row.id === draggedRowId);
+      const toIndex = table.rows.findIndex((row) => row.id === targetRowId);
+      if (fromIndex < 0 || toIndex < 0) return;
+      pushHistory();
+      const [moved] = table.rows.splice(fromIndex, 1);
+      const targetIndex = table.rows.findIndex((row) => row.id === targetRowId);
+      table.rows.splice(targetIndex, 0, moved);
+      renumberTableRows(table);
+      markTouched("investimento");
+      scheduleSave();
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-schedule]").forEach((node) => {
     node.addEventListener("input", () => {
       pushHistory();
@@ -1243,6 +1445,58 @@ function bind() {
       row[node.dataset.field] = node.innerText.trim();
       markTouched("cronograma");
       scheduleSave();
+    });
+
+    node.addEventListener("blur", () => {
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-schedule-row]").forEach((rowNode) => {
+    rowNode.addEventListener("dragstart", (event) => {
+      if (!event.target.closest("[data-drag-schedule]")) {
+        event.preventDefault();
+        return;
+      }
+      rowNode.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", rowNode.dataset.scheduleRow);
+    });
+
+    rowNode.addEventListener("dragend", () => {
+      rowNode.classList.remove("dragging");
+      document.querySelectorAll(".drop-target").forEach((target) => target.classList.remove("drop-target"));
+    });
+
+    rowNode.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      const draggedId = event.dataTransfer.getData("text/plain");
+      if (draggedId && draggedId !== rowNode.dataset.scheduleRow) {
+        rowNode.classList.add("drop-target");
+      }
+    });
+
+    rowNode.addEventListener("dragleave", () => {
+      rowNode.classList.remove("drop-target");
+    });
+
+    rowNode.addEventListener("drop", (event) => {
+      event.preventDefault();
+      rowNode.classList.remove("drop-target");
+      const draggedId = event.dataTransfer.getData("text/plain");
+      const targetId = rowNode.dataset.scheduleRow;
+      if (!draggedId || draggedId === targetId) return;
+      const proposal = activeProposal();
+      const fromIndex = proposal.schedule.findIndex((row) => row.id === draggedId);
+      const toIndex = proposal.schedule.findIndex((row) => row.id === targetId);
+      if (fromIndex < 0 || toIndex < 0) return;
+      pushHistory();
+      const [moved] = proposal.schedule.splice(fromIndex, 1);
+      const targetIndex = proposal.schedule.findIndex((row) => row.id === targetId);
+      proposal.schedule.splice(targetIndex, 0, moved);
+      markTouched("cronograma");
+      scheduleSave();
+      render();
     });
   });
 
@@ -1267,6 +1521,7 @@ function bind() {
       if (!table) return;
       pushHistory();
       table.rows = table.rows.filter((row) => row.id !== rowId);
+      renumberTableRows(table);
       markTouched("investimento");
       scheduleSave();
       render();
@@ -1327,6 +1582,13 @@ function updateTotals() {
   });
   const grandNode = document.querySelector("[data-grand-total]");
   if (grandNode) grandNode.textContent = money.format(investmentTotal(proposal.investment.tables));
+}
+
+function renumberTableRows(table) {
+  if (!table?.rows?.every((row) => /^\d+$/.test(String(row.item || "").trim()))) return;
+  table.rows.forEach((row, index) => {
+    row.item = String(index + 1);
+  });
 }
 
 document.addEventListener("keydown", async (event) => {
