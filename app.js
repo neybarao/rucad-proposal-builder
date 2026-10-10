@@ -34,7 +34,7 @@ const defaultProposal = () => ({
   createdAt: nowIso(),
   updatedAt: nowIso(),
   meta: {
-    number: "044/2026",
+    number: "00044/2026",
     date: "Campo Grande - MS, 15 de mai. de 2026.",
     client: "MRV",
     contact: "Wellington Arruda",
@@ -249,6 +249,24 @@ function activeProposal() {
   return proposals.find((item) => item.id === activeId) || null;
 }
 
+function proposalNumberParts(value) {
+  const match = String(value || "").trim().match(/^(\d[\d\s]*)\s*\/\s*(\d{4})/);
+  if (!match) return null;
+  const number = Number(match[1].replace(/\s/g, ""));
+  const year = Number(match[2]);
+  if (!Number.isFinite(number) || !Number.isFinite(year)) return null;
+  return { number, year };
+}
+
+function nextProposalNumber(year = new Date().getFullYear()) {
+  const maxNumber = proposals.reduce((max, proposal) => {
+    const parts = proposalNumberParts(proposal.meta?.number);
+    if (!parts || parts.year !== year) return max;
+    return Math.max(max, parts.number);
+  }, 0);
+  return `${String(maxNumber + 1).padStart(5, "0")}/${year}`;
+}
+
 function filenamePart(value, fallback = "Sem_nome") {
   return String(value || fallback)
     .normalize("NFD")
@@ -439,7 +457,7 @@ function markTouched(section) {
 async function createProposal() {
   pushHistory();
   const proposal = defaultProposal();
-  proposal.meta.number = `${String(proposals.length + 1).padStart(3, "0")}/2026`;
+  proposal.meta.number = nextProposalNumber();
   await persistProposal(proposal);
   proposals = [proposal, ...proposals];
   activeId = proposal.id;
