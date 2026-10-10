@@ -650,6 +650,17 @@ function renderProposalList() {
       <div class="sidebar-section">
         <div class="section-title">Propostas</div>
         <button class="btn btn-primary full-width" data-action="new">Nova proposta</button>
+        <div class="document-nav">
+          <div class="section-title">Documento</div>
+          ${navLink("dados", "Dados", "#dados")}
+          ${navLink("apresentacao", "Apresentação", "#apresentacao")}
+          ${navLink("escopo", "Escopo", "#escopo")}
+          ${navLink("investimento", "Investimento", "#investimento")}
+          ${navLink("cronograma", "Cronograma", "#cronograma")}
+          ${navLink("gantt", "Gantt", "#gantt")}
+          ${navLink("fechamento", "Fechamento", "#fechamento")}
+        </div>
+        <div class="section-title proposal-list-title">Propostas locais</div>
         <div class="proposal-stack">
           ${proposals
             .map(
@@ -663,16 +674,6 @@ function renderProposalList() {
             )
             .join("")}
         </div>
-      </div>
-      <div class="sidebar-section">
-        <div class="section-title">Documento</div>
-        ${navLink("dados", "Dados", "#dados")}
-        ${navLink("apresentacao", "Apresentação", "#apresentacao")}
-        ${navLink("escopo", "Escopo", "#escopo")}
-        ${navLink("investimento", "Investimento", "#investimento")}
-        ${navLink("cronograma", "Cronograma", "#cronograma")}
-        ${navLink("gantt", "Gantt", "#gantt")}
-        ${navLink("fechamento", "Fechamento", "#fechamento")}
       </div>
     </aside>
   `;
