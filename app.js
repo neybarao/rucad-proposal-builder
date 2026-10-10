@@ -13,16 +13,20 @@ const money = new Intl.NumberFormat("pt-BR", {
   currency: "BRL"
 });
 
+const clientLogos = Array.from({ length: 30 }, (_, index) => {
+  const number = String(index + 1).padStart(2, "0");
+  return { src: `assets/clients/logo${number}.png`, alt: `Cliente RUCAD ${number}` };
+});
+
 const defaultTemplate = () => ({
   id: SETTINGS_ID,
   presentation:
     "Oferecemos soluções completas em assessoria, consultorias e laudos elétricos, com expertise em comissionamento de sistemas elétricos de potência, manutenção preventiva e corretiva de subestações e usinas fotovoltaicas. Atuamos na elaboração de projetos elétricos, SPDA, construção de subestações e redes de média e baixa tensão, tanto em áreas urbanas quanto rurais.\n\nNossa atuação também inclui a manutenção de grupos geradores, além de soluções em eficiência energética para otimizar o consumo e reduzir custos. Com foco na confiabilidade e segurança, realizamos comissionamento de transformadores, cabines primárias e sistemas de aterramento.\n\nNosso compromisso é entregar soluções técnicas de alta qualidade, com foco em inovação e sustentabilidade, para garantir a máxima performance e segurança nos sistemas elétricos.",
-  clients: "MRV\nEnergisa\nPlaenge\nA.Yoshii\nÁguas Guariroba\nSão Gabriel\nVoltalia\nProdutores rurais",
   bank:
-    "CNPJ: 44.499.587/0001-09\nRazão Social: Rucad Engenharia Ltda\nBanco: 077 (Banco Inter)\nAgência: 0001\nConta Corrente: 17533554-0\nChave Pix: 44.499.587/0001-09\n\nBanco: 001 (Banco do Brasil)\nAgência: 2936-0\nConta Corrente: 50011-9\nChave Pix: rucad.engenharia@gmail.com",
+    "Razão Social: RUCAD ENGENHARIA LTDA\nNome Fantasia: RUCAD ENGENHARIA\nCNPJ: 44.499.587/0001-09\nData de Constituição: 06/12/2021\nInscrição Estadual: 28.483.794-6 (leia a observação)\nInscrição Municipal: 0032131600-0\nEndereço: Av. Gunter Hans, 3281\nBairro: Conjunto Aero Rancho\nCEP: 79.085-108\nCidade/UF: Campo Grande/MS\nTelefone: (67) 99650-6767\nE-mail: financeiro@rucadengenharia.com.br\n\nBanco: 077 (Banco Inter)\nAgência: 0001\nConta Corrente: 17533554-0\nChave Pix: 44.499.587/0001-09\n\nBanco: 001 (Banco do Brasil)\nAgência: 2936-0\nConta Corrente: 50011-9\nChave Pix: financeiro@rucadengenharia.com.br",
   validity: "Esta proposta tem validade de 7 (sete) dias.",
   engineers:
-    "Jônatas Carvalho\nEngenheiro Eletricista\nResponsável Técnico\nCREA-SP 5063066987\n\nWellington Ruffo\nEngenheiro Eletricista\nResponsável Técnico\nCREA-MS 18135-D"
+    "Jônatas de Almeida Carvalho\nEngenheiro Eletricista\nResponsável Técnico\nCREA-SP 5063066987\nCPF 405.229.188-32\nTelefone (67) 99254-4268\n\nWellington Ruffo de Souza\nEngenheiro Eletricista\nResponsável Técnico\nCREA-MS 18135-D\nCPF 031.650.681-86\nTelefone (67) 99629-1947"
 });
 
 const defaultProposal = () => ({
@@ -52,41 +56,51 @@ const defaultProposal = () => ({
     payment: "30 DDL"
   },
   investment: {
-    materials: [
+    tables: [
       {
         id: uid(),
-        item: "1",
-        description: "Postes (Concreto Circular)\n- 6 CC 12m/1.000 daN\n- 2 CC 11m/1.500 daN\n- 5 CC 11m/600 daN\n- 1 CC 10m/600 daN",
-        value: 39470
+        title: "Materiais (Faturamento Direto)",
+        rows: [
+          {
+            id: uid(),
+            item: "1",
+            description: "Postes (Concreto Circular)\n- 6 CC 12m/1.000 daN\n- 2 CC 11m/1.500 daN\n- 5 CC 11m/600 daN\n- 1 CC 10m/600 daN",
+            value: 39470
+          },
+          {
+            id: uid(),
+            item: "2",
+            description: "Transformadores\n- 1 Transformador 75 kVA (13,8 kV | 220/127V)\n- 5 Transformadores 112,5 kVA (13,8 kV | 220/127V)",
+            value: 116630
+          },
+          { id: uid(), item: "3", description: "Frete (postes e transformadores)", value: 7900 }
+        ]
       },
       {
         id: uid(),
-        item: "2",
-        description: "Transformadores\n- 1 Transformador 75 kVA (13,8 kV | 220/127V)\n- 5 Transformadores 112,5 kVA (13,8 kV | 220/127V)",
-        value: 116630
-      },
-      { id: uid(), item: "3", description: "Frete (postes e transformadores)", value: 7900 }
-    ],
-    services: [
-      {
-        id: uid(),
-        item: "1",
-        description:
-          "Serviços\n- Infraestrutura e Obras Civis\n- Montagem de Estruturas e Posteamento\n- Instalações Elétricas e Equipamentos\n- Comissionamento da RDU\n- Incluso deslocamento, alimentação da equipe técnica",
-        value: 68000
-      },
-      {
-        id: uid(),
-        item: "2",
-        description: "Materiais\n- Cabos, ferragens, iluminação pública, proteções, miscelâneas, etc.",
-        value: 178500
-      },
-      {
-        id: uid(),
-        item: "3",
-        description: "Impostos e Encargos\n- IRPJ, CSLL, PIS, COFINS, ISS e demais encargos",
-        value: 0,
-        label: "Incluso"
+        title: "Serviços (Empreitada Global)",
+        rows: [
+          {
+            id: uid(),
+            item: "1",
+            description:
+              "Serviços\n- Infraestrutura e Obras Civis\n- Montagem de Estruturas e Posteamento\n- Instalações Elétricas e Equipamentos\n- Comissionamento da RDU\n- Incluso deslocamento, alimentação da equipe técnica",
+            value: 68000
+          },
+          {
+            id: uid(),
+            item: "2",
+            description: "Materiais\n- Cabos, ferragens, iluminação pública, proteções, miscelâneas, etc.",
+            value: 178500
+          },
+          {
+            id: uid(),
+            item: "3",
+            description: "Impostos e Encargos\n- IRPJ, CSLL, PIS, COFINS, ISS e demais encargos",
+            value: 0,
+            label: "Incluso"
+          }
+        ]
       }
     ]
   },
@@ -114,7 +128,8 @@ const defaultProposal = () => ({
     }
   ],
   scheduleNotes:
-    "1 - Considerando a disponibilidade de todos os materiais.\n2 - Para solicitar a ligação da unidade, a extensão de rede (se houver) deve estar concluída, bem como a execução do Ponto de Entrega, cuja responsabilidade pela execução é da Energisa MS e a mesma dispõe de 120 dias para execução.\n\nTEMPO ESTIMADO TOTAL 100 DIAS"
+    "1 - Considerando a disponibilidade de todos os materiais.\n2 - Para solicitar a ligação da unidade, a extensão de rede (se houver) deve estar concluída, bem como a execução do Ponto de Entrega, cuja responsabilidade pela execução é da Energisa MS e a mesma dispõe de 120 dias para execução.\n\nTEMPO ESTIMADO TOTAL 100 DIAS",
+  touchedSections: {}
 });
 
 let db = null;
@@ -123,6 +138,10 @@ let proposals = [];
 let activeId = null;
 let template = defaultTemplate();
 let saveTimer = null;
+let undoStack = [];
+let redoStack = [];
+let isRestoringHistory = false;
+const HISTORY_LIMIT = 80;
 
 const app = document.querySelector("#app");
 
@@ -230,6 +249,38 @@ function activeProposal() {
   return proposals.find((item) => item.id === activeId) || null;
 }
 
+function normalizeInvestment(source, base) {
+  const investment = source?.investment || {};
+  if (Array.isArray(investment.tables)) {
+    return {
+      tables: investment.tables.map((table, index) => ({
+        id: table.id || uid(),
+        title: table.title || `Tabela ${index + 1}`,
+        rows: Array.isArray(table.rows) ? table.rows : []
+      }))
+    };
+  }
+
+  if (Array.isArray(investment.materials) || Array.isArray(investment.services)) {
+    return {
+      tables: [
+        {
+          id: uid(),
+          title: "Materiais (Faturamento Direto)",
+          rows: investment.materials || []
+        },
+        {
+          id: uid(),
+          title: "Serviços (Empreitada Global)",
+          rows: investment.services || []
+        }
+      ]
+    };
+  }
+
+  return structuredClone(base.investment);
+}
+
 function migrateProposal(source) {
   const base = defaultProposal();
   const isLegacy = !Array.isArray(source.schedule);
@@ -240,17 +291,27 @@ function migrateProposal(source) {
       ? { ...base.meta, number: source.meta?.number || base.meta.number }
       : { ...base.meta, ...(source.meta || {}) },
     blocks: isLegacy ? base.blocks : { ...base.blocks, ...(source.blocks || {}) },
-    investment: {
-      materials: isLegacy ? base.investment.materials : source.investment?.materials || base.investment.materials,
-      services: isLegacy ? base.investment.services : source.investment?.services || base.investment.services
-    },
+    investment: isLegacy ? structuredClone(base.investment) : normalizeInvestment(source, base),
     schedule: isLegacy ? base.schedule : source.schedule || base.schedule,
-    scheduleNotes: isLegacy ? base.scheduleNotes : source.scheduleNotes || base.scheduleNotes
+    scheduleNotes: isLegacy ? base.scheduleNotes : source.scheduleNotes || base.scheduleNotes,
+    touchedSections: isLegacy ? {} : source.touchedSections || {}
   };
 }
 
+function migrateTemplate(source) {
+  const defaults = defaultTemplate();
+  const nextTemplate = { ...defaults, ...(source || {}) };
+  if (!String(nextTemplate.bank || "").includes("financeiro@rucadengenharia.com.br")) {
+    nextTemplate.bank = defaults.bank;
+  }
+  if (!String(nextTemplate.engineers || "").includes("Jônatas de Almeida Carvalho")) {
+    nextTemplate.engineers = defaults.engineers;
+  }
+  return nextTemplate;
+}
+
 async function load() {
-  template = { ...defaultTemplate(), ...((await getTemplate()) || {}) };
+  template = migrateTemplate(await getTemplate());
   proposals = (await getAllProposals()).map(migrateProposal).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   if (!proposals.length) {
     const first = defaultProposal();
@@ -287,7 +348,69 @@ function renderSaveState(text) {
   if (el) el.textContent = text;
 }
 
+function historySnapshot() {
+  return structuredClone({
+    activeId,
+    template,
+    proposals
+  });
+}
+
+function pushHistory() {
+  if (isRestoringHistory) return;
+  undoStack.push(historySnapshot());
+  if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  redoStack = [];
+  updateHistoryButtons();
+}
+
+async function restoreHistory(snapshot) {
+  isRestoringHistory = true;
+  activeId = snapshot.activeId;
+  template = structuredClone(snapshot.template);
+  proposals = structuredClone(snapshot.proposals);
+  const nextIds = new Set(proposals.map((proposal) => proposal.id));
+  const existing = await getAllProposals();
+  await Promise.all([
+    persistTemplate(template),
+    ...existing.filter((proposal) => !nextIds.has(proposal.id)).map((proposal) => removeProposal(proposal.id)),
+    ...proposals.map((proposal) => persistProposal(proposal))
+  ]);
+  render();
+  isRestoringHistory = false;
+}
+
+async function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(historySnapshot());
+  const snapshot = undoStack.pop();
+  await restoreHistory(snapshot);
+}
+
+async function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(historySnapshot());
+  const snapshot = redoStack.pop();
+  await restoreHistory(snapshot);
+}
+
+function updateHistoryButtons() {
+  const undoButton = document.querySelector('[data-action="undo"]');
+  const redoButton = document.querySelector('[data-action="redo"]');
+  if (undoButton) undoButton.disabled = !undoStack.length;
+  if (redoButton) redoButton.disabled = !redoStack.length;
+}
+
+function markTouched(section) {
+  const proposal = activeProposal();
+  if (!proposal || !section) return;
+  proposal.touchedSections = { ...(proposal.touchedSections || {}), [section]: nowIso() };
+  const nav = document.querySelector(`[data-nav-section="${section}"]`);
+  nav?.classList.add("updated");
+}
+
 async function createProposal() {
+  pushHistory();
   const proposal = defaultProposal();
   proposal.meta.number = `${String(proposals.length + 1).padStart(3, "0")}/2026`;
   await persistProposal(proposal);
@@ -299,13 +422,17 @@ async function createProposal() {
 async function duplicateProposal() {
   const source = activeProposal();
   if (!source) return;
+  pushHistory();
   const proposal = structuredClone(source);
   proposal.id = uid();
   proposal.createdAt = nowIso();
   proposal.updatedAt = nowIso();
   proposal.meta.number = `${source.meta.number} - cópia`;
-  proposal.investment.materials = proposal.investment.materials.map((row) => ({ ...row, id: uid() }));
-  proposal.investment.services = proposal.investment.services.map((row) => ({ ...row, id: uid() }));
+  proposal.investment.tables = proposal.investment.tables.map((table) => ({
+    ...table,
+    id: uid(),
+    rows: table.rows.map((row) => ({ ...row, id: uid() }))
+  }));
   proposal.schedule = proposal.schedule.map((row) => ({ ...row, id: uid() }));
   await persistProposal(proposal);
   proposals = [proposal, ...proposals];
@@ -318,6 +445,7 @@ async function deleteActiveProposal() {
   if (!proposal) return;
   const ok = window.confirm(`Excluir a proposta ${proposal.meta.number}? Esta ação remove apenas o registro local deste navegador.`);
   if (!ok) return;
+  pushHistory();
   await removeProposal(proposal.id);
   proposals = proposals.filter((item) => item.id !== proposal.id);
   activeId = proposals[0]?.id || null;
@@ -326,6 +454,10 @@ async function deleteActiveProposal() {
 
 function total(rows) {
   return rows.reduce((sum, row) => sum + Number(row.value || 0), 0);
+}
+
+function investmentTotal(tables) {
+  return (tables || []).reduce((sum, table) => sum + total(table.rows || []), 0);
 }
 
 function escapeHtml(value = "") {
@@ -358,13 +490,127 @@ function editableBlock(value, attrs, className = "editable block-edit") {
   return `<div class="${className}" contenteditable="true" spellcheck="true" ${attrs}>${escapeHtml(value)}</div>`;
 }
 
-function clientsHtml(value) {
-  return String(value || "")
+function bankGroups(value) {
+  const groups = [];
+  let current = [];
+  String(value || "")
     .split("\n")
-    .map((client) => client.trim())
-    .filter(Boolean)
-    .map((client) => `<span>${escapeHtml(client)}</span>`)
+    .forEach((line) => {
+      if (!line.trim()) {
+        if (current.length) groups.push(current);
+        current = [];
+        return;
+      }
+      current.push(line.trim());
+    });
+  if (current.length) groups.push(current);
+  return groups;
+}
+
+function bankHtml(value) {
+  let lineIndex = 0;
+  return `
+    <div class="bank-grid">
+      ${bankGroups(value)
+        .map((group, groupIndex) => {
+          const titleLine = group.find((line) => line.toLowerCase().startsWith("banco:"));
+          const companyLine = group.find((line) => line.toLowerCase().startsWith("razão social:"));
+          const title =
+            groupIndex === 0
+              ? companyLine?.replace(/^Razão Social:\s*/i, "") || "Dados da empresa"
+              : titleLine?.replace(/^Banco:\s*/i, "") || `Conta ${groupIndex + 1}`;
+          return `
+            <div class="bank-card">
+              <h3>${escapeHtml(title)}</h3>
+              <dl>
+                ${group
+                  .map((line) => {
+                    const currentIndex = lineIndex;
+                    lineIndex += 1;
+                    const [label, ...rest] = line.split(":");
+                    const valueText = rest.join(":").trim();
+                    return `
+                      <div class="bank-row">
+                        <dt>${escapeHtml(label.trim())}</dt>
+                        <dd>${editable(valueText || line, `data-bank-line="${currentIndex}"`, "editable bank-value")}</dd>
+                      </div>
+                    `;
+                  })
+                  .join("")}
+              </dl>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function engineerGroups(value) {
+  const groups = [];
+  let current = [];
+  String(value || "")
+    .split("\n")
+    .forEach((line) => {
+      if (!line.trim()) {
+        if (current.length) groups.push(current);
+        current = [];
+        return;
+      }
+      current.push(line.trim());
+    });
+  if (current.length) groups.push(current);
+  return groups;
+}
+
+function engineersHtml(value) {
+  let lineIndex = 0;
+  return `
+    <div class="engineers-grid">
+      ${engineerGroups(value)
+        .map(
+          (group) => `
+            <div class="engineer-card">
+              ${group
+                .map((line, index) => {
+                  const currentIndex = lineIndex;
+                  lineIndex += 1;
+                  return editable(
+                    line,
+                    `data-engineer-line="${currentIndex}"`,
+                    `editable engineer-line ${index === 0 ? "engineer-name" : ""}`
+                  );
+                })
+                .join("")}
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function clientsHtml() {
+  return clientLogos
+    .map(
+      (client) => `
+        <div class="client-logo-card">
+          <img src="${client.src}" alt="${escapeHtml(client.alt)}" />
+        </div>
+      `
+    )
     .join("");
+}
+
+function navLink(section, label, href) {
+  const proposal = activeProposal();
+  const updated = Boolean(proposal?.touchedSections?.[section]);
+  return `
+    <a class="nav-link ${updated ? "updated" : ""}" href="${href}" data-nav-section="${section}">
+      <span>${label}</span>
+      <small>editado</small>
+    </a>
+  `;
 }
 
 function renderProposalList() {
@@ -389,23 +635,55 @@ function renderProposalList() {
       </div>
       <div class="sidebar-section">
         <div class="section-title">Documento</div>
-        <a class="nav-link" href="#dados">Dados</a>
-        <a class="nav-link" href="#apresentacao">Apresentação</a>
-        <a class="nav-link" href="#escopo">Escopo</a>
-        <a class="nav-link" href="#investimento">Investimento</a>
-        <a class="nav-link" href="#cronograma">Cronograma</a>
-        <a class="nav-link" href="#fechamento">Fechamento</a>
+        ${navLink("dados", "Dados", "#dados")}
+        ${navLink("apresentacao", "Apresentação", "#apresentacao")}
+        ${navLink("escopo", "Escopo", "#escopo")}
+        ${navLink("investimento", "Investimento", "#investimento")}
+        ${navLink("cronograma", "Cronograma", "#cronograma")}
+        ${navLink("fechamento", "Fechamento", "#fechamento")}
       </div>
     </aside>
   `;
 }
 
-function renderTable(kind, title, rows) {
+function renderTable(table, index) {
+  return renderTablePage(table, index, table.rows || [], { isFirstChunk: true, isLastChunk: true, pageNumber: 1, pageCount: 1 });
+}
+
+function rowWeight(row) {
+  const descriptionLines = String(row.description || "").split("\n").length;
+  return Math.max(1.4, 1 + descriptionLines * 0.62);
+}
+
+function chunkRows(rows, maxWeight = 10.6) {
+  const chunks = [];
+  let current = [];
+  let weight = 0;
+  rows.forEach((row) => {
+    const nextWeight = rowWeight(row);
+    if (current.length && weight + nextWeight > maxWeight) {
+      chunks.push(current);
+      current = [];
+      weight = 0;
+    }
+    current.push(row);
+    weight += nextWeight;
+  });
+  if (current.length) chunks.push(current);
+  return chunks.length ? chunks : [[]];
+}
+
+function renderTablePage(table, index, pageRows, options) {
+  const rows = table.rows || [];
+  const title = table.title || `Tabela ${index + 1}`;
+  const continuation = options.pageCount > 1 && !options.isFirstChunk ? " continuação" : "";
   return `
-    <section class="doc-section" id="${kind === "materials" ? "materiais" : "servicos"}">
-      <div class="section-kicker">${kind === "materials" ? "1." : "2."}</div>
-      <h2>${title}</h2>
-      <table class="doc-table" data-table="${kind}">
+    <section class="doc-section investment-section" id="${index === 0 ? "materiais" : `investimento-${table.id}`}">
+      <div class="section-heading-row">
+        <h2 class="numbered-heading"><span>${index + 1}.</span> ${editable(title, `data-table-title="${table.id}"`, "editable heading-edit")}${continuation ? `<small>${continuation}</small>` : ""}</h2>
+        <button class="icon-btn section-remove" data-delete-table="${table.id}" title="Remover tabela">×</button>
+      </div>
+      <table class="doc-table" data-table="${table.id}">
         <thead>
           <tr>
             <th class="col-item">Item</th>
@@ -415,28 +693,34 @@ function renderTable(kind, title, rows) {
           </tr>
         </thead>
         <tbody>
-          ${rows
+          ${pageRows
             .map(
               (row) => `
                 <tr data-row="${row.id}">
-                  <td>${editable(row.item || "", `data-kind="${kind}" data-row="${row.id}" data-field="item"`, "editable cell-edit")}</td>
-                  <td>${editableBlock(row.description || "", `data-kind="${kind}" data-row="${row.id}" data-field="description"`, "editable cell-edit rich-cell")}</td>
-                  <td class="money-cell">${editable(currencyInput(row.value, row.label), `data-kind="${kind}" data-row="${row.id}" data-field="value"`, "editable cell-edit money-edit")}</td>
-                  <td class="row-tools"><button class="icon-btn" data-delete-row="${kind}:${row.id}" title="Remover linha">×</button></td>
+                  <td>${editable(row.item || "", `data-table-id="${table.id}" data-row="${row.id}" data-field="item"`, "editable cell-edit")}</td>
+                  <td>${editableBlock(row.description || "", `data-table-id="${table.id}" data-row="${row.id}" data-field="description"`, "editable cell-edit rich-cell")}</td>
+                  <td class="money-cell">${editable(currencyInput(row.value, row.label), `data-table-id="${table.id}" data-row="${row.id}" data-field="value"`, "editable cell-edit money-edit")}</td>
+                  <td class="row-tools"><button class="icon-btn" data-delete-row="${table.id}:${row.id}" title="Remover linha">×</button></td>
                 </tr>
               `
             )
             .join("")}
         </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="2">Total</td>
-            <td class="money-cell" data-total="${kind}">${money.format(total(rows))}</td>
-            <td class="row-tools"></td>
-          </tr>
-        </tfoot>
+        ${
+          options.isLastChunk
+            ? `
+              <tfoot>
+                <tr>
+                  <td colspan="2">Total</td>
+                  <td class="money-cell" data-total="${table.id}">${money.format(total(rows))}</td>
+                  <td class="row-tools"></td>
+                </tr>
+              </tfoot>
+            `
+            : ""
+        }
       </table>
-      <button class="ghost-add" data-add-row="${kind}">Adicionar linha em ${title.toLowerCase()}</button>
+      ${options.isLastChunk ? `<button class="ghost-add" data-add-row="${table.id}">Adicionar linha em ${escapeHtml(title.toLowerCase())}</button>` : ""}
     </section>
   `;
 }
@@ -457,17 +741,82 @@ function renderScheduleRows(rows) {
     .join("");
 }
 
+function renderInvestmentPages(proposal, grandTotal) {
+  const tables = proposal.investment.tables || [];
+  const tablePages = tables.flatMap((table, tableIndex) => {
+    const chunks = chunkRows(table.rows || []);
+    return chunks.map((chunk, chunkIndex) => ({
+      table,
+      tableIndex,
+      chunk,
+      chunkIndex,
+      chunkCount: chunks.length
+    }));
+  });
+
+  const pages = tablePages.length
+    ? tablePages.map((page, pageIndex) => {
+        const isLastInvestmentPage = pageIndex === tablePages.length - 1;
+        const isFirstChunk = page.chunkIndex === 0;
+        const isLastChunk = page.chunkIndex === page.chunkCount - 1;
+        return `
+          <section class="page content-page investment-page" id="${pageIndex === 0 ? "investimento" : `investimento-pagina-${pageIndex + 1}`}">
+            ${pageBg()}
+            ${docTop(proposal)}
+            ${renderTablePage(page.table, page.tableIndex, page.chunk, {
+              isFirstChunk,
+              isLastChunk,
+              pageNumber: page.chunkIndex + 1,
+              pageCount: page.chunkCount
+            })}
+            ${
+              isLastInvestmentPage
+                ? `
+                  <button class="ghost-add add-table" data-add-table>Adicionar tabela de investimento</button>
+                  <div class="grand-total">
+                    <span>Investimento total</span>
+                    <strong data-grand-total>${money.format(grandTotal)}</strong>
+                  </div>
+                `
+                : ""
+            }
+            ${docFoot()}
+          </section>
+        `;
+      })
+    : [
+        `
+          <section class="page content-page investment-page" id="investimento">
+            ${pageBg()}
+            ${docTop(proposal)}
+            <section class="doc-section">
+              <h2>Investimento</h2>
+              <button class="ghost-add add-table" data-add-table>Adicionar tabela de investimento</button>
+            </section>
+            <div class="grand-total">
+              <span>Investimento total</span>
+              <strong data-grand-total>${money.format(grandTotal)}</strong>
+            </div>
+            ${docFoot()}
+          </section>
+        `
+      ];
+
+  return pages.join("");
+}
+
 function renderDocument(proposal) {
   if (!proposal) {
     return `<main class="document-stage"><div class="empty-state">Crie uma proposta para começar.</div></main>`;
   }
 
-  const grandTotal = total(proposal.investment.materials) + total(proposal.investment.services);
+  const grandTotal = investmentTotal(proposal.investment.tables);
 
   return `
     <main class="document-stage">
       <article class="paper">
         <section class="cover-page page">
+          ${pageBg()}
           <img class="cover-logo" src="assets/rucad-logotype-color-dark-h.svg" alt="RUCAD" />
           <div class="cover-content">
             <div class="eyebrow">Proposta Comercial Nº ${editable(proposal.meta.number, 'data-meta="number"', "editable inline-dark")}</div>
@@ -477,21 +826,21 @@ function renderDocument(proposal) {
         </section>
 
         <section class="page content-page" id="apresentacao">
+          ${pageBg()}
           ${docTop(proposal)}
           <section class="doc-section">
-            <div class="section-kicker">1</div>
             <h2>Apresentação</h2>
             ${editableBlock(template.presentation, 'data-template="presentation"')}
           </section>
           <section class="doc-section compact">
             <h2>Nossos clientes</h2>
-            <div class="client-grid" data-client-grid>${clientsHtml(template.clients)}</div>
-            ${editableBlock(template.clients, 'data-template="clients"', "editable block-edit client-source")}
+            <div class="client-grid" data-client-grid>${clientsHtml()}</div>
           </section>
           ${docFoot()}
         </section>
 
         <section class="page content-page" id="dados">
+          ${pageBg()}
           ${docTop(proposal)}
           <div class="letter-head">
             <div>${editable(proposal.meta.date, 'data-meta="date"', "editable line-edit")}</div>
@@ -510,23 +859,21 @@ function renderDocument(proposal) {
           ${docFoot()}
         </section>
 
-        <section class="page content-page" id="investimento">
-          ${docTop(proposal)}
-          ${renderTable("materials", "Materiais (Faturamento Direto)", proposal.investment.materials)}
-          ${renderTable("services", "Serviços (Empreitada Global)", proposal.investment.services)}
-          <div class="grand-total">
-            <span>Investimento total</span>
-            <strong data-grand-total>${money.format(grandTotal)}</strong>
-          </div>
-          ${docFoot()}
-        </section>
+        ${renderInvestmentPages(proposal, grandTotal)}
 
         <section class="page content-page">
+          ${pageBg()}
           ${docTop(proposal)}
           <section class="doc-section">
             <h2>Observações</h2>
             ${editableBlock(proposal.blocks.notes, 'data-block="notes"')}
           </section>
+          ${docFoot()}
+        </section>
+
+        <section class="page content-page">
+          ${pageBg()}
+          ${docTop(proposal)}
           <section class="doc-section" id="cronograma">
             <h2>Cronograma</h2>
             <table class="doc-table schedule-table">
@@ -546,19 +893,20 @@ function renderDocument(proposal) {
         </section>
 
         <section class="page content-page" id="fechamento">
+          ${pageBg()}
           ${docTop(proposal)}
           <section class="doc-section">
             <h2>Pagamento</h2>
             ${editableBlock(proposal.blocks.payment, 'data-block="payment"')}
           </section>
           <section class="doc-section">
-            <h2>Dados Bancários</h2>
-            ${editableBlock(template.bank, 'data-template="bank"')}
+            <h2>Dados da RUCAD</h2>
+            ${bankHtml(template.bank)}
           </section>
           <section class="doc-section closing">
             ${editableBlock(template.validity, 'data-template="validity"')}
             <p>Atenciosamente,</p>
-            ${editableBlock(template.engineers, 'data-template="engineers"', "editable engineers-edit")}
+            ${engineersHtml(template.engineers)}
           </section>
           ${docFoot()}
         </section>
@@ -576,11 +924,15 @@ function docTop(proposal) {
   `;
 }
 
+function pageBg() {
+  return `<img class="page-bg" src="assets/timbrado-a4.svg" alt="" aria-hidden="true" />`;
+}
+
 function docFoot() {
   return `
     <footer class="doc-footer">
-      <span>RUCAD Engenharia</span>
-      <span>Documento comercial</span>
+      <span>RUCAD Engenharia LTDA</span>
+      <span>financeiro@rucadengenharia.com.br</span>
     </footer>
   `;
 }
@@ -595,6 +947,8 @@ function render() {
         </div>
         <div class="top-actions">
           <span class="save-state">Salvo em ${storageMode}</span>
+          <button class="btn icon-action" data-action="undo" title="Desfazer (Ctrl+Z)" ${undoStack.length ? "" : "disabled"}>↶</button>
+          <button class="btn icon-action" data-action="redo" title="Refazer (Ctrl+Shift+Z)" ${redoStack.length ? "" : "disabled"}>↷</button>
           <button class="btn" data-action="duplicate" ${proposal ? "" : "disabled"}>Duplicar</button>
           <button class="btn btn-danger" data-action="delete" ${proposal ? "" : "disabled"}>Excluir</button>
           <button class="btn btn-primary" data-action="print" ${proposal ? "" : "disabled"}>Exportar PDF</button>
@@ -620,6 +974,8 @@ function bind() {
   document.querySelectorAll("[data-action]").forEach((button) => {
     button.addEventListener("click", async () => {
       const action = button.dataset.action;
+      if (action === "undo") await undo();
+      if (action === "redo") await redo();
       if (action === "new") await createProposal();
       if (action === "duplicate") await duplicateProposal();
       if (action === "delete") await deleteActiveProposal();
@@ -629,14 +985,17 @@ function bind() {
 
   document.querySelectorAll("[data-meta]").forEach((node) => {
     node.addEventListener("input", () => {
+      pushHistory();
       const proposal = activeProposal();
       proposal.meta[node.dataset.meta] = node.innerText.trim();
+      markTouched("dados");
       scheduleSave();
     });
   });
 
   document.querySelectorAll("[data-block]").forEach((node) => {
     node.addEventListener("input", () => {
+      pushHistory();
       const proposal = activeProposal();
       const key = node.dataset.block;
       if (key === "scheduleNotes") {
@@ -644,25 +1003,83 @@ function bind() {
       } else {
         proposal.blocks[key] = node.innerText.trim();
       }
+      markTouched(key === "scope" || key === "compliance" ? "escopo" : key === "scheduleNotes" ? "cronograma" : key === "payment" ? "fechamento" : "dados");
       scheduleSave();
     });
   });
 
   document.querySelectorAll("[data-template]").forEach((node) => {
     node.addEventListener("input", () => {
+      pushHistory();
       template[node.dataset.template] = node.innerText.trim();
-      if (node.dataset.template === "clients") {
-        const grid = document.querySelector("[data-client-grid]");
-        if (grid) grid.innerHTML = clientsHtml(template.clients);
-      }
+      markTouched(node.dataset.template === "presentation" ? "apresentacao" : "fechamento");
       scheduleSave("template");
     });
   });
 
-  document.querySelectorAll("[data-kind]").forEach((node) => {
+  document.querySelectorAll("[data-bank-line]").forEach((node) => {
     node.addEventListener("input", () => {
+      pushHistory();
+      const targetIndex = Number(node.dataset.bankLine);
+      let currentIndex = 0;
+      template.bank = String(template.bank || "")
+        .split("\n")
+        .map((line) => {
+          if (!line.trim()) return line;
+          if (currentIndex !== targetIndex) {
+            currentIndex += 1;
+            return line;
+          }
+          currentIndex += 1;
+          const [label] = line.split(":");
+          return `${label}: ${node.innerText.trim()}`;
+        })
+        .join("\n");
+      markTouched("fechamento");
+      scheduleSave("template");
+    });
+  });
+
+  document.querySelectorAll("[data-engineer-line]").forEach((node) => {
+    node.addEventListener("input", () => {
+      pushHistory();
+      const targetIndex = Number(node.dataset.engineerLine);
+      let currentIndex = 0;
+      template.engineers = String(template.engineers || "")
+        .split("\n")
+        .map((line) => {
+          if (!line.trim()) return line;
+          if (currentIndex !== targetIndex) {
+            currentIndex += 1;
+            return line;
+          }
+          currentIndex += 1;
+          return node.innerText.trim();
+        })
+        .join("\n");
+      markTouched("fechamento");
+      scheduleSave("template");
+    });
+  });
+
+  document.querySelectorAll("[data-table-title]").forEach((node) => {
+    node.addEventListener("input", () => {
+      pushHistory();
       const proposal = activeProposal();
-      const row = proposal.investment[node.dataset.kind].find((item) => item.id === node.dataset.row);
+      const table = proposal.investment.tables.find((item) => item.id === node.dataset.tableTitle);
+      if (!table) return;
+      table.title = node.innerText.trim();
+      markTouched("investimento");
+      scheduleSave();
+    });
+  });
+
+  document.querySelectorAll("[data-table-id]").forEach((node) => {
+    node.addEventListener("input", () => {
+      pushHistory();
+      const proposal = activeProposal();
+      const table = proposal.investment.tables.find((item) => item.id === node.dataset.tableId);
+      const row = table?.rows.find((item) => item.id === node.dataset.row);
       if (!row) return;
       const value = node.innerText.trim();
       if (node.dataset.field === "value") {
@@ -676,16 +1093,19 @@ function bind() {
       } else {
         row[node.dataset.field] = value;
       }
+      markTouched("investimento");
       scheduleSave();
     });
   });
 
   document.querySelectorAll("[data-schedule]").forEach((node) => {
     node.addEventListener("input", () => {
+      pushHistory();
       const proposal = activeProposal();
       const row = proposal.schedule.find((item) => item.id === node.dataset.schedule);
       if (!row) return;
       row[node.dataset.field] = node.innerText.trim();
+      markTouched("cronograma");
       scheduleSave();
     });
   });
@@ -693,7 +1113,11 @@ function bind() {
   document.querySelectorAll("[data-add-row]").forEach((button) => {
     button.addEventListener("click", () => {
       const proposal = activeProposal();
-      proposal.investment[button.dataset.addRow].push({ id: uid(), item: "", description: "Nova linha", value: 0 });
+      const table = proposal.investment.tables.find((item) => item.id === button.dataset.addRow);
+      if (!table) return;
+      pushHistory();
+      table.rows.push({ id: uid(), item: String(table.rows.length + 1), description: "Nova linha", value: 0 });
+      markTouched("investimento");
       scheduleSave();
       render();
     });
@@ -702,8 +1126,36 @@ function bind() {
   document.querySelectorAll("[data-delete-row]").forEach((button) => {
     button.addEventListener("click", () => {
       const proposal = activeProposal();
-      const [kind, id] = button.dataset.deleteRow.split(":");
-      proposal.investment[kind] = proposal.investment[kind].filter((row) => row.id !== id);
+      const [tableId, rowId] = button.dataset.deleteRow.split(":");
+      const table = proposal.investment.tables.find((item) => item.id === tableId);
+      if (!table) return;
+      pushHistory();
+      table.rows = table.rows.filter((row) => row.id !== rowId);
+      markTouched("investimento");
+      scheduleSave();
+      render();
+    });
+  });
+
+  document.querySelector("[data-add-table]")?.addEventListener("click", () => {
+    const proposal = activeProposal();
+    pushHistory();
+    proposal.investment.tables.push({
+      id: uid(),
+      title: `Nova tabela ${proposal.investment.tables.length + 1}`,
+      rows: [{ id: uid(), item: "1", description: "Nova linha", value: 0 }]
+    });
+    markTouched("investimento");
+    scheduleSave();
+    render();
+  });
+
+  document.querySelectorAll("[data-delete-table]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const proposal = activeProposal();
+      pushHistory();
+      proposal.investment.tables = proposal.investment.tables.filter((table) => table.id !== button.dataset.deleteTable);
+      markTouched("investimento");
       scheduleSave();
       render();
     });
@@ -711,7 +1163,9 @@ function bind() {
 
   document.querySelector("[data-add-schedule]")?.addEventListener("click", () => {
     const proposal = activeProposal();
+    pushHistory();
     proposal.schedule.push({ id: uid(), task: "Nova tarefa", responsible: "", start: "", end: "" });
+    markTouched("cronograma");
     scheduleSave();
     render();
   });
@@ -719,7 +1173,9 @@ function bind() {
   document.querySelectorAll("[data-delete-schedule]").forEach((button) => {
     button.addEventListener("click", () => {
       const proposal = activeProposal();
+      pushHistory();
       proposal.schedule = proposal.schedule.filter((row) => row.id !== button.dataset.deleteSchedule);
+      markTouched("cronograma");
       scheduleSave();
       render();
     });
@@ -729,15 +1185,24 @@ function bind() {
 function updateTotals() {
   const proposal = activeProposal();
   if (!proposal) return;
-  const materialsTotal = total(proposal.investment.materials);
-  const servicesTotal = total(proposal.investment.services);
-  const materialsNode = document.querySelector('[data-total="materials"]');
-  const servicesNode = document.querySelector('[data-total="services"]');
+  proposal.investment.tables.forEach((table) => {
+    const node = document.querySelector(`[data-total="${table.id}"]`);
+    if (node) node.textContent = money.format(total(table.rows || []));
+  });
   const grandNode = document.querySelector("[data-grand-total]");
-  if (materialsNode) materialsNode.textContent = money.format(materialsTotal);
-  if (servicesNode) servicesNode.textContent = money.format(servicesTotal);
-  if (grandNode) grandNode.textContent = money.format(materialsTotal + servicesTotal);
+  if (grandNode) grandNode.textContent = money.format(investmentTotal(proposal.investment.tables));
 }
+
+document.addEventListener("keydown", async (event) => {
+  const key = event.key.toLowerCase();
+  if (!(event.ctrlKey || event.metaKey) || key !== "z") return;
+  event.preventDefault();
+  if (event.shiftKey) {
+    await redo();
+  } else {
+    await undo();
+  }
+});
 
 await initStore();
 await load();
