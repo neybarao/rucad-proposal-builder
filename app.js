@@ -734,12 +734,15 @@ function renderScheduleRows(rows) {
   return rows
     .map(
       (row) => `
-        <tr data-schedule-row="${row.id}">
+        <tr data-schedule-row="${row.id}" draggable="true">
           <td>${editableBlock(row.task, `data-schedule="${row.id}" data-field="task"`, "editable cell-edit")}</td>
           <td>${editable(row.responsible, `data-schedule="${row.id}" data-field="responsible"`, "editable cell-edit")}</td>
           <td>${editable(row.start, `data-schedule="${row.id}" data-field="start"`, "editable cell-edit")}</td>
           <td>${editable(row.end, `data-schedule="${row.id}" data-field="end"`, "editable cell-edit")}</td>
-          <td class="row-tools"><button class="icon-btn" data-delete-schedule="${row.id}" title="Remover linha">×</button></td>
+          <td class="row-tools schedule-tools">
+            <span class="drag-handle" data-drag-schedule="${row.id}" title="Reordenar linha" draggable="true">⋮⋮</span>
+            <button class="icon-btn" data-delete-schedule="${row.id}" title="Remover linha">×</button>
+          </td>
         </tr>
       `
     )
@@ -1356,6 +1359,58 @@ function bind() {
       row[node.dataset.field] = node.innerText.trim();
       markTouched("cronograma");
       scheduleSave();
+    });
+
+    node.addEventListener("blur", () => {
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-schedule-row]").forEach((rowNode) => {
+    rowNode.addEventListener("dragstart", (event) => {
+      if (!event.target.closest("[data-drag-schedule]")) {
+        event.preventDefault();
+        return;
+      }
+      rowNode.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", rowNode.dataset.scheduleRow);
+    });
+
+    rowNode.addEventListener("dragend", () => {
+      rowNode.classList.remove("dragging");
+      document.querySelectorAll(".drop-target").forEach((target) => target.classList.remove("drop-target"));
+    });
+
+    rowNode.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      const draggedId = event.dataTransfer.getData("text/plain");
+      if (draggedId && draggedId !== rowNode.dataset.scheduleRow) {
+        rowNode.classList.add("drop-target");
+      }
+    });
+
+    rowNode.addEventListener("dragleave", () => {
+      rowNode.classList.remove("drop-target");
+    });
+
+    rowNode.addEventListener("drop", (event) => {
+      event.preventDefault();
+      rowNode.classList.remove("drop-target");
+      const draggedId = event.dataTransfer.getData("text/plain");
+      const targetId = rowNode.dataset.scheduleRow;
+      if (!draggedId || draggedId === targetId) return;
+      const proposal = activeProposal();
+      const fromIndex = proposal.schedule.findIndex((row) => row.id === draggedId);
+      const toIndex = proposal.schedule.findIndex((row) => row.id === targetId);
+      if (fromIndex < 0 || toIndex < 0) return;
+      pushHistory();
+      const [moved] = proposal.schedule.splice(fromIndex, 1);
+      const targetIndex = proposal.schedule.findIndex((row) => row.id === targetId);
+      proposal.schedule.splice(targetIndex, 0, moved);
+      markTouched("cronograma");
+      scheduleSave();
+      render();
     });
   });
 
