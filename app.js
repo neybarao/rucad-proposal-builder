@@ -249,6 +249,33 @@ function activeProposal() {
   return proposals.find((item) => item.id === activeId) || null;
 }
 
+function filenamePart(value, fallback = "Sem_nome") {
+  return String(value || fallback)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, "e")
+    .replace(/[^a-zA-Z0-9-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 48) || fallback;
+}
+
+function proposalPdfFilename(proposal) {
+  const number = filenamePart(String(proposal?.meta?.number || "").replace(/\//g, "-"), "0000-0000");
+  const client = filenamePart(proposal?.meta?.client, "Cliente");
+  return `${number}_${client}_Proposta_Rucad`;
+}
+
+function exportPdf() {
+  const proposal = activeProposal();
+  if (!proposal) return;
+  const previousTitle = document.title;
+  document.title = proposalPdfFilename(proposal);
+  window.print();
+  window.setTimeout(() => {
+    document.title = previousTitle;
+  }, 1000);
+}
+
 function normalizeInvestment(source, base) {
   const investment = source?.investment || {};
   if (Array.isArray(investment.tables)) {
@@ -1219,7 +1246,7 @@ function bind() {
       if (action === "new") await createProposal();
       if (action === "duplicate") await duplicateProposal();
       if (action === "delete") await deleteActiveProposal();
-      if (action === "print") window.print();
+      if (action === "print") exportPdf();
     });
   });
 
