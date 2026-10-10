@@ -644,6 +644,7 @@ function renderProposalList() {
         ${navLink("escopo", "Escopo", "#escopo")}
         ${navLink("investimento", "Investimento", "#investimento")}
         ${navLink("cronograma", "Cronograma", "#cronograma")}
+        ${navLink("gantt", "Gantt", "#gantt")}
         ${navLink("fechamento", "Fechamento", "#fechamento")}
       </div>
     </aside>
@@ -861,6 +862,116 @@ function renderSchedulePages(proposal) {
     .join("");
 }
 
+function parseScheduleDate(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+  if (!match) return null;
+  const day = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const year = Number(match[3].length === 2 ? `20${match[3]}` : match[3]);
+  const date = new Date(year, month, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
+  return date;
+}
+
+function dateDiffDays(start, end) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  return Math.round((end - start) / dayMs);
+}
+
+function ganttItems(schedule) {
+  return (schedule || [])
+    .map((row) => {
+      const start = parseScheduleDate(row.start);
+      const end = parseScheduleDate(row.end);
+      if (!start || !end || end < start) return null;
+      return { ...row, startDate: start, endDate: end };
+    })
+    .filter(Boolean);
+}
+
+function formatGanttDate(date) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(date);
+}
+
+function renderGanttRows(items, minDate, spanDays) {
+  return items
+    .map((item) => {
+      const offset = Math.max(0, dateDiffDays(minDate, item.startDate));
+      const duration = Math.max(1, dateDiffDays(item.startDate, item.endDate) + 1);
+      const left = (offset / spanDays) * 100;
+      const width = Math.max(4, (duration / spanDays) * 100);
+      return `
+        <div class="gantt-row">
+          <div class="gantt-label">
+            <strong>${escapeHtml(item.task || "Tarefa")}</strong>
+            <span>${escapeHtml(item.responsible || "Sem responsável")}</span>
+          </div>
+          <div class="gantt-track">
+            <div class="gantt-bar" style="left: ${left}%; width: ${Math.min(width, 100 - left)}%;">
+              <span>${formatGanttDate(item.startDate)} - ${formatGanttDate(item.endDate)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderGanttPage(proposal) {
+  const items = ganttItems(proposal.schedule);
+  const invalidCount = Math.max(0, (proposal.schedule || []).length - items.length);
+
+  if (!items.length) {
+    return `
+      <section class="page content-page" id="gantt">
+        ${pageBg()}
+        ${docTop(proposal)}
+        <section class="doc-section">
+          <h2>Gantt do Projeto</h2>
+          <div class="empty-gantt">Preencha início e término no cronograma para gerar o Gantt.</div>
+        </section>
+        ${docFoot()}
+      </section>
+    `;
+  }
+
+  const minDate = new Date(Math.min(...items.map((item) => item.startDate.getTime())));
+  const maxDate = new Date(Math.max(...items.map((item) => item.endDate.getTime())));
+  const spanDays = Math.max(1, dateDiffDays(minDate, maxDate) + 1);
+  const monthTicks = [];
+  const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  while (cursor <= maxDate) {
+    const offset = Math.max(0, dateDiffDays(minDate, cursor));
+    monthTicks.push({ label: cursor.toLocaleDateString("pt-BR", { month: "short" }), left: Math.min(100, (offset / spanDays) * 100) });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  return `
+    <section class="page content-page" id="gantt">
+      ${pageBg()}
+      ${docTop(proposal)}
+      <section class="doc-section gantt-section">
+        <h2>Gantt do Projeto</h2>
+        <div class="gantt-summary">
+          <span>${formatGanttDate(minDate)} - ${formatGanttDate(maxDate)}</span>
+          <strong>${spanDays} dias</strong>
+        </div>
+        <div class="gantt-chart">
+          <div class="gantt-scale">
+            <div></div>
+            <div class="gantt-months">
+              ${monthTicks.map((tick) => `<span style="left: ${tick.left}%;">${escapeHtml(tick.label)}</span>`).join("")}
+            </div>
+          </div>
+          ${renderGanttRows(items, minDate, spanDays)}
+        </div>
+        ${invalidCount ? `<p class="gantt-warning">${invalidCount} tarefa(s) sem datas válidas não aparecem no Gantt.</p>` : ""}
+      </section>
+      ${docFoot()}
+    </section>
+  `;
+}
+
 function renderGuaranteesPages(proposal) {
   return chunkText(proposal.blocks.guarantees)
     .map(
@@ -1010,6 +1121,8 @@ function renderDocument(proposal) {
         </section>
 
         ${renderSchedulePages(proposal)}
+
+        ${renderGanttPage(proposal)}
 
         ${renderGuaranteesPages(proposal)}
 
