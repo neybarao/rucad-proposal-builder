@@ -1,9 +1,10 @@
 const DB_NAME = "rucad-propostas-db";
-const DB_VERSION = 1;
-const STORE = "proposals";
+const DB_VERSION = 2;
+const PROPOSAL_STORE = "proposals";
+const SETTINGS_STORE = "settings";
+const SETTINGS_ID = "global-template";
 
 const nowIso = () => new Date().toISOString();
-
 const uid = () =>
   crypto.randomUUID ? crypto.randomUUID() : `proposal-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
@@ -12,7 +13,17 @@ const money = new Intl.NumberFormat("pt-BR", {
   currency: "BRL"
 });
 
-const today = () => new Date().toISOString().slice(0, 10);
+const defaultTemplate = () => ({
+  id: SETTINGS_ID,
+  presentation:
+    "Oferecemos soluções completas em assessoria, consultorias e laudos elétricos, com expertise em comissionamento de sistemas elétricos de potência, manutenção preventiva e corretiva de subestações e usinas fotovoltaicas. Atuamos na elaboração de projetos elétricos, SPDA, construção de subestações e redes de média e baixa tensão, tanto em áreas urbanas quanto rurais.\n\nNossa atuação também inclui a manutenção de grupos geradores, além de soluções em eficiência energética para otimizar o consumo e reduzir custos. Com foco na confiabilidade e segurança, realizamos comissionamento de transformadores, cabines primárias e sistemas de aterramento.\n\nNosso compromisso é entregar soluções técnicas de alta qualidade, com foco em inovação e sustentabilidade, para garantir a máxima performance e segurança nos sistemas elétricos.",
+  clients: "MRV\nEnergisa\nPlaenge\nA.Yoshii\nÁguas Guariroba\nSão Gabriel\nVoltalia\nProdutores rurais",
+  bank:
+    "CNPJ: 44.499.587/0001-09\nRazão Social: Rucad Engenharia Ltda\nBanco: 077 (Banco Inter)\nAgência: 0001\nConta Corrente: 17533554-0\nChave Pix: 44.499.587/0001-09\n\nBanco: 001 (Banco do Brasil)\nAgência: 2936-0\nConta Corrente: 50011-9\nChave Pix: rucad.engenharia@gmail.com",
+  validity: "Esta proposta tem validade de 7 (sete) dias.",
+  engineers:
+    "Jônatas Carvalho\nEngenheiro Eletricista\nResponsável Técnico\nCREA-SP 5063066987\n\nWellington Ruffo\nEngenheiro Eletricista\nResponsável Técnico\nCREA-MS 18135-D"
+});
 
 const defaultProposal = () => ({
   id: uid(),
@@ -20,60 +31,97 @@ const defaultProposal = () => ({
   updatedAt: nowIso(),
   meta: {
     number: "044/2026",
-    date: today(),
-    client: "MRV Engenharia e Participações S.A.",
-    contact: "",
-    title: "Execução de Rede de Distribuição Urbana e Iluminação Pública",
-    enterprise: "Castelo di Orleans",
+    date: "Campo Grande - MS, 15 de mai. de 2026.",
+    client: "MRV",
+    contact: "Wellington Arruda",
+    title: "Execução de Redes de Distribuição Urbana e Iluminação Pública",
+    enterprise: "Residencial Castelo Di Orleans",
     location: "Campo Grande/MS"
   },
   blocks: {
-    introduction:
-      "Apresentamos nossa proposta comercial para execução dos serviços de engenharia elétrica descritos neste documento, contemplando fornecimento de materiais, mão de obra especializada, equipamentos e acompanhamento técnico conforme escopo contratado.",
+    opening:
+      "Conforme solicitado, enviamos proposta de EXECUÇÃO DE REDES DE DISTRIBUIÇÃO URBANA E ILUMINAÇÃO PÚBLICA, a ser realizada no Residencial Castelo Di Orleans na cidade de Campo Grande/MS, tendo como premissas as seguintes informações:",
     scope:
-      "Execução de rede de média tensão e baixa tensão, incluindo implantação de estruturas, lançamento de condutores, instalação de equipamentos de proteção, conexões, adequações necessárias e entrega técnica conforme normas aplicáveis da concessionária local.",
-    materials:
-      "Os materiais serão fornecidos conforme quantitativos aprovados em projeto, observando especificações técnicas, padrões de qualidade e disponibilidade comercial no momento da contratação.",
-    services:
-      "A execução será conduzida por equipe técnica especializada, com supervisão operacional, ferramentas adequadas, equipamentos de segurança e controles de qualidade durante as etapas da obra.",
+      "Construção de rede de distribuição de energia elétrica urbana, MT e BT do Residencial Castelo Di Orleans.\n\nLocal da Obra: Campo Grande/MS.\n\n1. Implantação de todos os postes e demais itens conforme projeto.\n2. Montagem eletromecânica das redes, MT e BT com cabos e acessórios.\n3. Montagem eletromecânica dos postos de transformadores.\n4. Concretagem de base de postes, conforme exigência da concessionária e detalhe previsto em projeto.\n5. Conferência e validação da lista de materiais contidas nos anexos, para aquisição pela CONTRATADA.\n6. Registro de ART de execução.\n7. Doação junto a concessionária.",
+    compliance:
+      "A contratada deverá cumprir integralmente as exigências técnicas, normativas e documentais da concessionária Energisa, incluindo utilização de materiais homologados, observância das normas NBR e NR aplicáveis, e apresentação de toda a documentação técnica exigida para aceite da obra, sob pena de retenção de pagamentos até a regularização.",
     notes:
-      "Valores sujeitos à validação final de projeto, disponibilidade de materiais e condições de acesso ao local. Serviços não descritos expressamente neste documento deverão ser avaliados em aditivo específico.",
-    schedule:
-      "O prazo de execução será confirmado após aprovação da proposta, liberação formal para início dos serviços e disponibilidade integral das frentes de trabalho.",
-    warranties:
-      "A RUCAD assegura garantia dos serviços executados conforme legislação vigente e condições técnicas de uso, operação e manutenção dos sistemas implantados.",
-    payment:
-      "Condições de pagamento a combinar, podendo ser estruturadas por entrada, marcos de execução e quitação final mediante conclusão dos serviços."
+      "1. Os valores dos materiais são estimados, assim, poderão sofrer alteração em virtude do refinamento do escopo do projeto.\n2. A proposta em questão contempla o faturamento direto à RUCAD ENGENHARIA na aquisição dos materiais necessários para a realização dos serviços (empreitada global), EXCETO: postes e transformadores.\n3. Na execução dos serviços por terceiros, os materiais e equipamentos utilizados na execução direta da obra pelo interessado devem ser novos e de fornecedores homologados pela Energisa MS, acompanhados das respectivas notas fiscais e termos de garantia dos fabricantes, sendo vedada a utilização de materiais ou equipamentos reformados ou reaproveitados, por tratar-se de ativos a serem incorporados.\n4. A RUCAD ENGENHARIA será responsável por todo o transporte interno no canteiro de obras, dos materiais e equipamentos, tanto o seu transporte vertical como horizontal.\n5. Os valores referentes ao FRETE, previstos no escopo de materiais, poderão ser dispensados caso a contratada utilize fornecedores homologados sediados na mesma cidade da obra ou que ofereçam entrega gratuita.\n6. O prazo estimado para fabricação, transporte e entrega de materiais críticos como postes e transformadores é de aproximadamente 60 dias, considerando os fornecedores base desta proposta. Caso haja necessidade de acelerar o cronograma, o contratante poderá optar por fornecedores de outras praças que ofereçam prazos reduzidos, ainda que isso possa impactar o custo final.",
+    guarantees:
+      "O prazo de garantia dos serviços será de 90 (noventa) dias, contados a partir da data de doação da rede à concessionária de energia.\n\nDurante o período de garantia, a Contratada obriga-se a reparar, corrigir, remover, reconstruir ou substituir, às suas expensas, no prazo estabelecido pela fiscalização, quaisquer defeitos, falhas ou incorreções resultantes da execução dos serviços, ainda que ocultos, nos termos do art. 618 do Código Civil Brasileiro.\n\nNos casos de vícios ocultos, o prazo de garantia será contado a partir da constatação do defeito, observando-se o disposto no referido artigo.",
+    payment: "30 DDL"
   },
   investment: {
     materials: [
-      { id: uid(), description: "Materiais elétricos conforme projeto aprovado", value: 0 },
-      { id: uid(), description: "Equipamentos, estruturas e acessórios de montagem", value: 0 }
+      {
+        id: uid(),
+        item: "1",
+        description: "Postes (Concreto Circular)\n- 6 CC 12m/1.000 daN\n- 2 CC 11m/1.500 daN\n- 5 CC 11m/600 daN\n- 1 CC 10m/600 daN",
+        value: 39470
+      },
+      {
+        id: uid(),
+        item: "2",
+        description: "Transformadores\n- 1 Transformador 75 kVA (13,8 kV | 220/127V)\n- 5 Transformadores 112,5 kVA (13,8 kV | 220/127V)",
+        value: 116630
+      },
+      { id: uid(), item: "3", description: "Frete (postes e transformadores)", value: 7900 }
     ],
     services: [
-      { id: uid(), description: "Mão de obra especializada para execução de rede", value: 0 },
-      { id: uid(), description: "Mobilização, ferramentas, supervisão e entrega técnica", value: 0 }
+      {
+        id: uid(),
+        item: "1",
+        description:
+          "Serviços\n- Infraestrutura e Obras Civis\n- Montagem de Estruturas e Posteamento\n- Instalações Elétricas e Equipamentos\n- Comissionamento da RDU\n- Incluso deslocamento, alimentação da equipe técnica",
+        value: 68000
+      },
+      {
+        id: uid(),
+        item: "2",
+        description: "Materiais\n- Cabos, ferragens, iluminação pública, proteções, miscelâneas, etc.",
+        value: 178500
+      },
+      {
+        id: uid(),
+        item: "3",
+        description: "Impostos e Encargos\n- IRPJ, CSLL, PIS, COFINS, ISS e demais encargos",
+        value: 0,
+        label: "Incluso"
+      }
     ]
-  }
+  },
+  schedule: [
+    {
+      id: uid(),
+      task: "Aprovação da Proposta Comercial 044/26 (até 10 dias)",
+      responsible: "MRV",
+      start: "18/05/26",
+      end: "28/05/26"
+    },
+    {
+      id: uid(),
+      task: "Aquisição/fabricação dos materiais e entrega no local da obra (até 60 dias)",
+      responsible: "Fornecedores",
+      start: "28/05/26",
+      end: "27/07/26"
+    },
+    {
+      id: uid(),
+      task: "Execução da Obra (por residencial) (até 30 dias)",
+      responsible: "Rucad Engenharia",
+      start: "27/07/26",
+      end: "26/08/26"
+    }
+  ],
+  scheduleNotes:
+    "1 - Considerando a disponibilidade de todos os materiais.\n2 - Para solicitar a ligação da unidade, a extensão de rede (se houver) deve estar concluída, bem como a execução do Ponto de Entrega, cuja responsabilidade pela execução é da Energisa MS e a mesma dispõe de 120 dias para execução.\n\nTEMPO ESTIMADO TOTAL 100 DIAS"
 });
-
-const template = {
-  institutional:
-    "A RUCAD atua com engenharia elétrica, construção e manutenção de redes de distribuição de baixa e média tensão, subestações, sistemas fotovoltaicos, ensaios, comissionamento e laudos técnicos. Nosso compromisso é unir rigor técnico, organização de obra e entrega responsável.",
-  bank:
-    "RUCAD Engenharia Elétrica\nCNPJ: inserir CNPJ\nBanco: inserir banco\nAgência: inserir agência\nConta: inserir conta\nChave PIX: inserir chave",
-  clients: ["MRV", "Energisa", "Plaenge", "A.Yoshii", "Águas Guariroba", "São Gabriel", "Voltalia", "Produtores Rurais"],
-  signatures: {
-    company: "RUCAD Engenharia Elétrica",
-    client: "Contratante"
-  }
-};
 
 let db = null;
 let storageMode = "IndexedDB";
 let proposals = [];
 let activeId = null;
-let activeTab = "dados";
+let template = defaultTemplate();
 let saveTimer = null;
 
 const app = document.querySelector("#app");
@@ -84,10 +132,15 @@ function openDb() {
       reject(new Error("IndexedDB indisponível"));
       return;
     }
-
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE, { keyPath: "id" });
+      const database = request.result;
+      if (!database.objectStoreNames.contains(PROPOSAL_STORE)) {
+        database.createObjectStore(PROPOSAL_STORE, { keyPath: "id" });
+      }
+      if (!database.objectStoreNames.contains(SETTINGS_STORE)) {
+        database.createObjectStore(SETTINGS_STORE, { keyPath: "id" });
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -102,38 +155,59 @@ async function initStore() {
   }
 }
 
-function tx(mode = "readonly") {
-  return db.transaction(STORE, mode).objectStore(STORE);
+function store(name, mode = "readonly") {
+  return db.transaction(name, mode).objectStore(name);
 }
 
-function localKey() {
-  return "rucad-propostas-local";
+function localKey(key) {
+  return `rucad-propostas-${key}`;
 }
 
 async function getAllProposals() {
   if (!db) {
-    return JSON.parse(localStorage.getItem(localKey()) || "[]");
+    return JSON.parse(localStorage.getItem(localKey("proposals")) || "[]");
   }
-
   return new Promise((resolve, reject) => {
-    const request = tx().getAll();
+    const request = store(PROPOSAL_STORE).getAll();
     request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getTemplate() {
+  if (!db) {
+    return JSON.parse(localStorage.getItem(localKey("template")) || "null");
+  }
+  return new Promise((resolve, reject) => {
+    const request = store(SETTINGS_STORE).get(SETTINGS_ID);
+    request.onsuccess = () => resolve(request.result || null);
     request.onerror = () => reject(request.error);
   });
 }
 
 async function persistProposal(proposal) {
   if (!db) {
-    const all = JSON.parse(localStorage.getItem(localKey()) || "[]");
+    const all = JSON.parse(localStorage.getItem(localKey("proposals")) || "[]");
     const next = all.some((item) => item.id === proposal.id)
       ? all.map((item) => (item.id === proposal.id ? proposal : item))
       : [proposal, ...all];
-    localStorage.setItem(localKey(), JSON.stringify(next));
+    localStorage.setItem(localKey("proposals"), JSON.stringify(next));
     return;
   }
-
   return new Promise((resolve, reject) => {
-    const request = tx("readwrite").put(proposal);
+    const request = store(PROPOSAL_STORE, "readwrite").put(proposal);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function persistTemplate(nextTemplate) {
+  if (!db) {
+    localStorage.setItem(localKey("template"), JSON.stringify(nextTemplate));
+    return;
+  }
+  return new Promise((resolve, reject) => {
+    const request = store(SETTINGS_STORE, "readwrite").put(nextTemplate);
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
@@ -141,13 +215,12 @@ async function persistProposal(proposal) {
 
 async function removeProposal(id) {
   if (!db) {
-    const all = JSON.parse(localStorage.getItem(localKey()) || "[]").filter((item) => item.id !== id);
-    localStorage.setItem(localKey(), JSON.stringify(all));
+    const all = JSON.parse(localStorage.getItem(localKey("proposals")) || "[]").filter((item) => item.id !== id);
+    localStorage.setItem(localKey("proposals"), JSON.stringify(all));
     return;
   }
-
   return new Promise((resolve, reject) => {
-    const request = tx("readwrite").delete(id);
+    const request = store(PROPOSAL_STORE, "readwrite").delete(id);
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
@@ -157,30 +230,55 @@ function activeProposal() {
   return proposals.find((item) => item.id === activeId) || null;
 }
 
+function migrateProposal(source) {
+  const base = defaultProposal();
+  const isLegacy = !Array.isArray(source.schedule);
+  return {
+    ...base,
+    ...source,
+    meta: isLegacy
+      ? { ...base.meta, number: source.meta?.number || base.meta.number }
+      : { ...base.meta, ...(source.meta || {}) },
+    blocks: isLegacy ? base.blocks : { ...base.blocks, ...(source.blocks || {}) },
+    investment: {
+      materials: isLegacy ? base.investment.materials : source.investment?.materials || base.investment.materials,
+      services: isLegacy ? base.investment.services : source.investment?.services || base.investment.services
+    },
+    schedule: isLegacy ? base.schedule : source.schedule || base.schedule,
+    scheduleNotes: isLegacy ? base.scheduleNotes : source.scheduleNotes || base.scheduleNotes
+  };
+}
+
 async function load() {
-  proposals = (await getAllProposals()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  template = { ...defaultTemplate(), ...((await getTemplate()) || {}) };
+  proposals = (await getAllProposals()).map(migrateProposal).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   if (!proposals.length) {
     const first = defaultProposal();
     await persistProposal(first);
     proposals = [first];
   }
   activeId = proposals[0]?.id || null;
+  await persistTemplate(template);
   render();
 }
 
-function scheduleSave() {
-  const proposal = activeProposal();
-  if (!proposal) return;
-  proposal.updatedAt = nowIso();
-  renderSaveState("Salvando...");
+function scheduleSave(kind = "proposal") {
   clearTimeout(saveTimer);
+  renderSaveState("Salvando...");
   saveTimer = setTimeout(async () => {
-    await persistProposal(proposal);
-    proposals = proposals
-      .map((item) => (item.id === proposal.id ? proposal : item))
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    if (kind === "template") {
+      await persistTemplate(template);
+    } else {
+      const proposal = activeProposal();
+      if (proposal) {
+        proposal.updatedAt = nowIso();
+        await persistProposal(proposal);
+        proposals = proposals
+          .map((item) => (item.id === proposal.id ? proposal : item))
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      }
+    }
     renderSaveState(`Salvo em ${storageMode}`);
-    render();
   }, 350);
 }
 
@@ -189,48 +287,12 @@ function renderSaveState(text) {
   if (el) el.textContent = text;
 }
 
-function updateMeta(key, value) {
-  const proposal = activeProposal();
-  proposal.meta[key] = value;
-  scheduleSave();
-  renderPreviewOnly();
-}
-
-function updateBlock(key, value) {
-  const proposal = activeProposal();
-  proposal.blocks[key] = value;
-  scheduleSave();
-  renderPreviewOnly();
-}
-
-function updateInvestment(kind, rowId, field, value) {
-  const proposal = activeProposal();
-  const row = proposal.investment[kind].find((item) => item.id === rowId);
-  row[field] = field === "value" ? Number(value || 0) : value;
-  scheduleSave();
-  renderPreviewOnly();
-}
-
-function addInvestmentRow(kind) {
-  activeProposal().investment[kind].push({ id: uid(), description: "", value: 0 });
-  scheduleSave();
-  render();
-}
-
-function deleteInvestmentRow(kind, rowId) {
-  const proposal = activeProposal();
-  proposal.investment[kind] = proposal.investment[kind].filter((row) => row.id !== rowId);
-  scheduleSave();
-  render();
-}
-
 async function createProposal() {
   const proposal = defaultProposal();
   proposal.meta.number = `${String(proposals.length + 1).padStart(3, "0")}/2026`;
   await persistProposal(proposal);
   proposals = [proposal, ...proposals];
   activeId = proposal.id;
-  activeTab = "dados";
   render();
 }
 
@@ -244,6 +306,7 @@ async function duplicateProposal() {
   proposal.meta.number = `${source.meta.number} - cópia`;
   proposal.investment.materials = proposal.investment.materials.map((row) => ({ ...row, id: uid() }));
   proposal.investment.services = proposal.investment.services.map((row) => ({ ...row, id: uid() }));
+  proposal.schedule = proposal.schedule.map((row) => ({ ...row, id: uid() }));
   await persistProposal(proposal);
   proposals = [proposal, ...proposals];
   activeId = proposal.id;
@@ -274,12 +337,6 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-function dateLabel(value) {
-  if (!value) return "";
-  const [year, month, day] = value.split("-");
-  return `${day}/${month}/${year}`;
-}
-
 function formatUpdated(value) {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -289,286 +346,242 @@ function formatUpdated(value) {
   }).format(new Date(value));
 }
 
-function field(label, value, oninput, type = "text", full = false) {
-  return `
-    <div class="field ${full ? "full" : ""}">
-      <label>${label}</label>
-      <input type="${type}" value="${escapeHtml(value)}" data-change="${oninput}" />
-    </div>
-  `;
+function currencyInput(value, label = "") {
+  return label || money.format(Number(value || 0));
 }
 
-function textarea(label, value, key) {
-  return `
-    <div class="field full">
-      <label>${label}</label>
-      <textarea data-block="${key}">${escapeHtml(value)}</textarea>
-    </div>
-  `;
+function editable(value, attrs, className = "editable") {
+  return `<span class="${className}" contenteditable="true" spellcheck="true" ${attrs}>${escapeHtml(value)}</span>`;
 }
 
-function renderInvestmentEditor(kind, title, rows) {
-  return `
-    <div class="table-editor">
-      <div class="locked-box"><strong>${title}</strong>Use linhas estruturadas para manter o total automático e a exportação consistente.</div>
-      ${rows
-        .map(
-          (row) => `
-            <div class="row-editor">
-              <input value="${escapeHtml(row.description)}" placeholder="Descrição" data-invest-kind="${kind}" data-row="${row.id}" data-field="description" />
-              <input type="number" min="0" step="0.01" value="${Number(row.value || 0)}" placeholder="Valor" data-invest-kind="${kind}" data-row="${row.id}" data-field="value" />
-              <button class="icon-btn" data-delete-row="${kind}:${row.id}" title="Remover linha">×</button>
-            </div>
-          `
-        )
-        .join("")}
-      <button class="btn" data-add-row="${kind}">Adicionar linha</button>
-      <div class="locked-box"><strong>Total</strong>${money.format(total(rows))}</div>
-    </div>
-  `;
+function editableBlock(value, attrs, className = "editable block-edit") {
+  return `<div class="${className}" contenteditable="true" spellcheck="true" ${attrs}>${escapeHtml(value)}</div>`;
 }
 
-function renderEditor(proposal) {
-  const tabs = [
-    ["dados", "Dados"],
-    ["texto", "Textos"],
-    ["investimento", "Investimento"],
-    ["padrao", "Template"]
-  ];
+function clientsHtml(value) {
+  return String(value || "")
+    .split("\n")
+    .map((client) => client.trim())
+    .filter(Boolean)
+    .map((client) => `<span>${escapeHtml(client)}</span>`)
+    .join("");
+}
 
+function renderProposalList() {
   return `
-    <section class="editor">
-      <div class="tabs">
-        ${tabs
-          .map(
-            ([id, label]) =>
-              `<button class="tab ${activeTab === id ? "active" : ""}" data-tab="${id}">${label}</button>`
-          )
-          .join("")}
-      </div>
-
-      <div class="form-section ${activeTab === "dados" ? "active" : ""}">
-        <div class="field-grid">
-          ${field("Número", proposal.meta.number, "number")}
-          ${field("Data", proposal.meta.date, "date", "date")}
-          ${field("Cliente", proposal.meta.client, "client")}
-          ${field("Contato", proposal.meta.contact, "contact")}
-          ${field("Título", proposal.meta.title, "title", "text", true)}
-          ${field("Empreendimento", proposal.meta.enterprise, "enterprise")}
-          ${field("Local", proposal.meta.location, "location")}
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="section-title">Propostas</div>
+        <button class="btn btn-primary full-width" data-action="new">Nova proposta</button>
+        <div class="proposal-stack">
+          ${proposals
+            .map(
+              (proposal) => `
+                <button class="proposal-card ${proposal.id === activeId ? "active" : ""}" data-open="${proposal.id}">
+                  <strong>${escapeHtml(proposal.meta.number)}</strong>
+                  <span>${escapeHtml(proposal.meta.client || "Sem cliente")}</span>
+                  <small>${formatUpdated(proposal.updatedAt)}</small>
+                </button>
+              `
+            )
+            .join("")}
         </div>
       </div>
-
-      <div class="form-section ${activeTab === "texto" ? "active" : ""}">
-        ${textarea("Introdução", proposal.blocks.introduction, "introduction")}
-        ${textarea("Escopo", proposal.blocks.scope, "scope")}
-        ${textarea("Materiais", proposal.blocks.materials, "materials")}
-        ${textarea("Serviços", proposal.blocks.services, "services")}
-        ${textarea("Observações", proposal.blocks.notes, "notes")}
-        ${textarea("Cronograma", proposal.blocks.schedule, "schedule")}
-        ${textarea("Garantias", proposal.blocks.warranties, "warranties")}
-        ${textarea("Pagamento", proposal.blocks.payment, "payment")}
+      <div class="sidebar-section">
+        <div class="section-title">Documento</div>
+        <a class="nav-link" href="#dados">Dados</a>
+        <a class="nav-link" href="#apresentacao">Apresentação</a>
+        <a class="nav-link" href="#escopo">Escopo</a>
+        <a class="nav-link" href="#investimento">Investimento</a>
+        <a class="nav-link" href="#cronograma">Cronograma</a>
+        <a class="nav-link" href="#fechamento">Fechamento</a>
       </div>
-
-      <div class="form-section ${activeTab === "investimento" ? "active" : ""}">
-        ${renderInvestmentEditor("materials", "Materiais", proposal.investment.materials)}
-        ${renderInvestmentEditor("services", "Serviços", proposal.investment.services)}
-      </div>
-
-      <div class="form-section ${activeTab === "padrao" ? "active" : ""}">
-        <div class="locked-box"><strong>Conteúdo institucional protegido</strong>${escapeHtml(template.institutional)}</div>
-        <div class="locked-box"><strong>Dados bancários padrão</strong>${escapeHtml(template.bank)}</div>
-        <div class="locked-box"><strong>Nossos clientes</strong>${template.clients.map(escapeHtml).join(" · ")}</div>
-        <div class="locked-box"><strong>Assinaturas</strong>${escapeHtml(template.signatures.company)} · ${escapeHtml(template.signatures.client)}</div>
-      </div>
-    </section>
+    </aside>
   `;
 }
 
-function renderTable(title, rows) {
+function renderTable(kind, title, rows) {
   return `
-    <div class="doc-section">
+    <section class="doc-section" id="${kind === "materials" ? "materiais" : "servicos"}">
+      <div class="section-kicker">${kind === "materials" ? "1." : "2."}</div>
       <h2>${title}</h2>
-      <table class="doc-table">
+      <table class="doc-table" data-table="${kind}">
         <thead>
-          <tr><th>Descrição</th><th>Valor</th></tr>
+          <tr>
+            <th class="col-item">Item</th>
+            <th>Descrição</th>
+            <th class="col-money">Valor</th>
+            <th class="row-tools"></th>
+          </tr>
         </thead>
         <tbody>
           ${rows
             .map(
-              (row) =>
-                `<tr><td>${escapeHtml(row.description || "-")}</td><td class="money">${money.format(Number(row.value || 0))}</td></tr>`
+              (row) => `
+                <tr data-row="${row.id}">
+                  <td>${editable(row.item || "", `data-kind="${kind}" data-row="${row.id}" data-field="item"`, "editable cell-edit")}</td>
+                  <td>${editableBlock(row.description || "", `data-kind="${kind}" data-row="${row.id}" data-field="description"`, "editable cell-edit rich-cell")}</td>
+                  <td class="money-cell">${editable(currencyInput(row.value, row.label), `data-kind="${kind}" data-row="${row.id}" data-field="value"`, "editable cell-edit money-edit")}</td>
+                  <td class="row-tools"><button class="icon-btn" data-delete-row="${kind}:${row.id}" title="Remover linha">×</button></td>
+                </tr>
+              `
             )
             .join("")}
         </tbody>
         <tfoot>
-          <tr><td>Total</td><td class="money">${money.format(total(rows))}</td></tr>
+          <tr>
+            <td colspan="2">Total</td>
+            <td class="money-cell" data-total="${kind}">${money.format(total(rows))}</td>
+            <td class="row-tools"></td>
+          </tr>
         </tfoot>
       </table>
-    </div>
+      <button class="ghost-add" data-add-row="${kind}">Adicionar linha em ${title.toLowerCase()}</button>
+    </section>
   `;
 }
 
-function renderPreview(proposal) {
+function renderScheduleRows(rows) {
+  return rows
+    .map(
+      (row) => `
+        <tr data-schedule-row="${row.id}">
+          <td>${editableBlock(row.task, `data-schedule="${row.id}" data-field="task"`, "editable cell-edit")}</td>
+          <td>${editable(row.responsible, `data-schedule="${row.id}" data-field="responsible"`, "editable cell-edit")}</td>
+          <td>${editable(row.start, `data-schedule="${row.id}" data-field="start"`, "editable cell-edit")}</td>
+          <td>${editable(row.end, `data-schedule="${row.id}" data-field="end"`, "editable cell-edit")}</td>
+          <td class="row-tools"><button class="icon-btn" data-delete-schedule="${row.id}" title="Remover linha">×</button></td>
+        </tr>
+      `
+    )
+    .join("");
+}
+
+function renderDocument(proposal) {
   if (!proposal) {
-    return `<div class="no-document">Crie uma proposta para começar.</div>`;
+    return `<main class="document-stage"><div class="empty-state">Crie uma proposta para começar.</div></main>`;
   }
 
-  const materialsTotal = total(proposal.investment.materials);
-  const servicesTotal = total(proposal.investment.services);
-  const grandTotal = materialsTotal + servicesTotal;
+  const grandTotal = total(proposal.investment.materials) + total(proposal.investment.services);
 
   return `
-    <div class="sheet">
-      <section class="page cover">
-        <div class="doc-logo"><span class="doc-logo-mark">R</span><span>RUCAD</span></div>
-        <div class="cover-main">
-          <span class="proposal-kicker">Proposta Comercial ${escapeHtml(proposal.meta.number)}</span>
-          <h1>${escapeHtml(proposal.meta.title)}</h1>
-          <div class="cover-meta">
-            <div><b>Cliente</b>${escapeHtml(proposal.meta.client || "-")}</div>
-            <div><b>Empreendimento</b>${escapeHtml(proposal.meta.enterprise || "-")}</div>
-            <div><b>Local</b>${escapeHtml(proposal.meta.location || "-")}</div>
-            <div><b>Data</b>${escapeHtml(dateLabel(proposal.meta.date))}</div>
+    <main class="document-stage">
+      <article class="paper">
+        <section class="cover-page page">
+          <img class="cover-logo" src="assets/rucad-logotype-color-dark-h.svg" alt="RUCAD" />
+          <div class="cover-content">
+            <div class="eyebrow">Proposta Comercial Nº ${editable(proposal.meta.number, 'data-meta="number"', "editable inline-dark")}</div>
+            <h1>${editable(proposal.meta.title, 'data-meta="title"', "editable title-edit")}</h1>
+            <div class="cover-client">Cliente: ${editable(proposal.meta.client, 'data-meta="client"', "editable inline-dark")}</div>
           </div>
-        </div>
-        <div class="cover-foot">
-          <span>Sua demanda, nossa solução.</span>
-          <span>A Rucad não pára!</span>
-        </div>
-      </section>
+        </section>
 
-      <section class="page">
-        ${docHeader(proposal)}
-        <div class="doc-section">
-          <h2>Apresentação</h2>
-          <p>${escapeHtml(template.institutional)}</p>
-          <p>${escapeHtml(proposal.blocks.introduction)}</p>
-        </div>
-        <div class="doc-section">
-          <h2>Dados da Proposta</h2>
-          <div class="info-grid">
-            <div class="info-box"><b>Proposta</b>${escapeHtml(proposal.meta.number)}</div>
-            <div class="info-box"><b>Contato</b>${escapeHtml(proposal.meta.contact || "-")}</div>
-            <div class="info-box"><b>Cliente</b>${escapeHtml(proposal.meta.client || "-")}</div>
-            <div class="info-box"><b>Local</b>${escapeHtml(proposal.meta.location || "-")}</div>
+        <section class="page content-page" id="apresentacao">
+          ${docTop(proposal)}
+          <section class="doc-section">
+            <div class="section-kicker">1</div>
+            <h2>Apresentação</h2>
+            ${editableBlock(template.presentation, 'data-template="presentation"')}
+          </section>
+          <section class="doc-section compact">
+            <h2>Nossos clientes</h2>
+            <div class="client-grid" data-client-grid>${clientsHtml(template.clients)}</div>
+            ${editableBlock(template.clients, 'data-template="clients"', "editable block-edit client-source")}
+          </section>
+          ${docFoot()}
+        </section>
+
+        <section class="page content-page" id="dados">
+          ${docTop(proposal)}
+          <div class="letter-head">
+            <div>${editable(proposal.meta.date, 'data-meta="date"', "editable line-edit")}</div>
+            <strong>PROPOSTA COMERCIAL - ${editable(proposal.meta.number, 'data-meta="number"', "editable line-edit")}</strong>
+            <div>À ${editable(proposal.meta.client, 'data-meta="client"', "editable line-edit")}</div>
+            <div>A/C ${editable(proposal.meta.contact, 'data-meta="contact"', "editable line-edit")}</div>
           </div>
-        </div>
-        <div class="doc-section">
-          <h2>Escopo</h2>
-          <p>${escapeHtml(proposal.blocks.scope)}</p>
-        </div>
-        ${docFooter()}
-      </section>
+          <section class="doc-section">
+            ${editableBlock(proposal.blocks.opening, 'data-block="opening"')}
+          </section>
+          <section class="doc-section" id="escopo">
+            <h2>Escopo</h2>
+            ${editableBlock(proposal.blocks.scope, 'data-block="scope"')}
+            ${editableBlock(proposal.blocks.compliance, 'data-block="compliance"', "editable block-edit note-block")}
+          </section>
+          ${docFoot()}
+        </section>
 
-      <section class="page">
-        ${docHeader(proposal)}
-        <div class="doc-section">
-          <h2>Materiais</h2>
-          <p>${escapeHtml(proposal.blocks.materials)}</p>
-        </div>
-        <div class="doc-section">
-          <h2>Serviços</h2>
-          <p>${escapeHtml(proposal.blocks.services)}</p>
-        </div>
-        ${renderTable("Investimento em Materiais", proposal.investment.materials)}
-        ${renderTable("Investimento em Serviços", proposal.investment.services)}
-        <div class="doc-section">
-          <table class="doc-table">
-            <tfoot>
-              <tr><td>Investimento Total</td><td class="money">${money.format(grandTotal)}</td></tr>
-            </tfoot>
-          </table>
-        </div>
-        ${docFooter()}
-      </section>
-
-      <section class="page">
-        ${docHeader(proposal)}
-        <div class="doc-section">
-          <h2>Observações</h2>
-          <p>${escapeHtml(proposal.blocks.notes)}</p>
-        </div>
-        <div class="doc-section">
-          <h2>Cronograma</h2>
-          <p>${escapeHtml(proposal.blocks.schedule)}</p>
-        </div>
-        <div class="doc-section">
-          <h2>Garantias</h2>
-          <p>${escapeHtml(proposal.blocks.warranties)}</p>
-        </div>
-        <div class="doc-section">
-          <h2>Pagamento</h2>
-          <p>${escapeHtml(proposal.blocks.payment)}</p>
-        </div>
-        <div class="doc-section">
-          <h2>Dados Bancários</h2>
-          <p>${escapeHtml(template.bank)}</p>
-        </div>
-        ${docFooter()}
-      </section>
-
-      <section class="page">
-        ${docHeader(proposal)}
-        <div class="doc-section">
-          <h2>Nossos Clientes</h2>
-          <div class="clients">
-            ${template.clients.map((client) => `<div class="client-pill">${escapeHtml(client)}</div>`).join("")}
+        <section class="page content-page" id="investimento">
+          ${docTop(proposal)}
+          ${renderTable("materials", "Materiais (Faturamento Direto)", proposal.investment.materials)}
+          ${renderTable("services", "Serviços (Empreitada Global)", proposal.investment.services)}
+          <div class="grand-total">
+            <span>Investimento total</span>
+            <strong data-grand-total>${money.format(grandTotal)}</strong>
           </div>
-        </div>
-        <div class="signature-grid">
-          <div class="signature">${escapeHtml(template.signatures.company)}</div>
-          <div class="signature">${escapeHtml(template.signatures.client)}</div>
-        </div>
-        ${docFooter()}
-      </section>
-    </div>
+          ${docFoot()}
+        </section>
+
+        <section class="page content-page">
+          ${docTop(proposal)}
+          <section class="doc-section">
+            <h2>Observações</h2>
+            ${editableBlock(proposal.blocks.notes, 'data-block="notes"')}
+          </section>
+          <section class="doc-section" id="cronograma">
+            <h2>Cronograma</h2>
+            <table class="doc-table schedule-table">
+              <thead>
+                <tr><th>Tarefa</th><th>Responsável</th><th>Início</th><th>Término</th><th class="row-tools"></th></tr>
+              </thead>
+              <tbody>${renderScheduleRows(proposal.schedule)}</tbody>
+            </table>
+            <button class="ghost-add" data-add-schedule>Adicionar linha no cronograma</button>
+            ${editableBlock(proposal.scheduleNotes, 'data-block="scheduleNotes"', "editable block-edit note-block")}
+          </section>
+          <section class="doc-section">
+            <h2>Garantias</h2>
+            ${editableBlock(proposal.blocks.guarantees, 'data-block="guarantees"')}
+          </section>
+          ${docFoot()}
+        </section>
+
+        <section class="page content-page" id="fechamento">
+          ${docTop(proposal)}
+          <section class="doc-section">
+            <h2>Pagamento</h2>
+            ${editableBlock(proposal.blocks.payment, 'data-block="payment"')}
+          </section>
+          <section class="doc-section">
+            <h2>Dados Bancários</h2>
+            ${editableBlock(template.bank, 'data-template="bank"')}
+          </section>
+          <section class="doc-section closing">
+            ${editableBlock(template.validity, 'data-template="validity"')}
+            <p>Atenciosamente,</p>
+            ${editableBlock(template.engineers, 'data-template="engineers"', "editable engineers-edit")}
+          </section>
+          ${docFoot()}
+        </section>
+      </article>
+    </main>
   `;
 }
 
-function docHeader(proposal) {
+function docTop(proposal) {
   return `
     <header class="doc-header">
-      <span>RUCAD Engenharia Elétrica</span>
+      <img src="assets/rucad-logotype-color-dark-h.svg" alt="RUCAD" />
       <span>Proposta ${escapeHtml(proposal.meta.number)}</span>
     </header>
   `;
 }
 
-function docFooter() {
+function docFoot() {
   return `
     <footer class="doc-footer">
-      <span>RUCAD · Engenharia elétrica</span>
+      <span>RUCAD Engenharia</span>
       <span>Documento comercial</span>
     </footer>
-  `;
-}
-
-function renderProposalList() {
-  return `
-    <aside class="proposal-list">
-      <div class="panel-head">
-        <h1>Propostas locais</h1>
-        <p>Documentos salvos neste navegador. Recarregar ou fechar a aba preserva o trabalho neste dispositivo.</p>
-      </div>
-      <div class="list-items">
-        ${
-          proposals.length
-            ? proposals
-                .map(
-                  (proposal) => `
-                    <button class="proposal-card ${proposal.id === activeId ? "active" : ""}" data-open="${proposal.id}">
-                      <strong>${escapeHtml(proposal.meta.number)} · ${escapeHtml(proposal.meta.client || "Sem cliente")}</strong>
-                      <span>${escapeHtml(proposal.meta.title || "Sem título")}</span>
-                      <span>Editado em ${formatUpdated(proposal.updatedAt)}</span>
-                    </button>
-                  `
-                )
-                .join("")
-            : `<div class="empty">Nenhuma proposta criada.</div>`
-        }
-      </div>
-    </aside>
   `;
 }
 
@@ -578,35 +591,22 @@ function render() {
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <div class="brand-mark">R</div>
-          <div>
-            <div class="brand-title">RUCAD Propostas</div>
-            <div class="brand-subtitle">Sem backend · autosave local · PDF pelo navegador</div>
-          </div>
+          <img src="assets/rucad-logotype-color-dark-h.svg" alt="RUCAD" />
         </div>
         <div class="top-actions">
           <span class="save-state">Salvo em ${storageMode}</span>
-          <button class="btn" data-action="new">Nova</button>
           <button class="btn" data-action="duplicate" ${proposal ? "" : "disabled"}>Duplicar</button>
           <button class="btn btn-danger" data-action="delete" ${proposal ? "" : "disabled"}>Excluir</button>
           <button class="btn btn-primary" data-action="print" ${proposal ? "" : "disabled"}>Exportar PDF</button>
         </div>
       </header>
-      <main class="layout">
+      <div class="layout">
         ${renderProposalList()}
-        <div class="workspace">
-          ${proposal ? renderEditor(proposal) : ""}
-          <section class="preview-wrap" id="preview">${renderPreview(proposal)}</section>
-        </div>
-      </main>
+        ${renderDocument(proposal)}
+      </div>
     </div>
   `;
   bind();
-}
-
-function renderPreviewOnly() {
-  const preview = document.querySelector("#preview");
-  if (preview) preview.innerHTML = renderPreview(activeProposal());
 }
 
 function bind() {
@@ -614,38 +614,6 @@ function bind() {
     button.addEventListener("click", () => {
       activeId = button.dataset.open;
       render();
-    });
-  });
-
-  document.querySelectorAll("[data-tab]").forEach((button) => {
-    button.addEventListener("click", () => {
-      activeTab = button.dataset.tab;
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-change]").forEach((input) => {
-    input.addEventListener("input", () => updateMeta(input.dataset.change, input.value));
-  });
-
-  document.querySelectorAll("[data-block]").forEach((input) => {
-    input.addEventListener("input", () => updateBlock(input.dataset.block, input.value));
-  });
-
-  document.querySelectorAll("[data-invest-kind]").forEach((input) => {
-    input.addEventListener("input", () =>
-      updateInvestment(input.dataset.investKind, input.dataset.row, input.dataset.field, input.value)
-    );
-  });
-
-  document.querySelectorAll("[data-add-row]").forEach((button) => {
-    button.addEventListener("click", () => addInvestmentRow(button.dataset.addRow));
-  });
-
-  document.querySelectorAll("[data-delete-row]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const [kind, rowId] = button.dataset.deleteRow.split(":");
-      deleteInvestmentRow(kind, rowId);
     });
   });
 
@@ -658,6 +626,117 @@ function bind() {
       if (action === "print") window.print();
     });
   });
+
+  document.querySelectorAll("[data-meta]").forEach((node) => {
+    node.addEventListener("input", () => {
+      const proposal = activeProposal();
+      proposal.meta[node.dataset.meta] = node.innerText.trim();
+      scheduleSave();
+    });
+  });
+
+  document.querySelectorAll("[data-block]").forEach((node) => {
+    node.addEventListener("input", () => {
+      const proposal = activeProposal();
+      const key = node.dataset.block;
+      if (key === "scheduleNotes") {
+        proposal.scheduleNotes = node.innerText.trim();
+      } else {
+        proposal.blocks[key] = node.innerText.trim();
+      }
+      scheduleSave();
+    });
+  });
+
+  document.querySelectorAll("[data-template]").forEach((node) => {
+    node.addEventListener("input", () => {
+      template[node.dataset.template] = node.innerText.trim();
+      if (node.dataset.template === "clients") {
+        const grid = document.querySelector("[data-client-grid]");
+        if (grid) grid.innerHTML = clientsHtml(template.clients);
+      }
+      scheduleSave("template");
+    });
+  });
+
+  document.querySelectorAll("[data-kind]").forEach((node) => {
+    node.addEventListener("input", () => {
+      const proposal = activeProposal();
+      const row = proposal.investment[node.dataset.kind].find((item) => item.id === node.dataset.row);
+      if (!row) return;
+      const value = node.innerText.trim();
+      if (node.dataset.field === "value") {
+        const normalized = value.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3})/g, "").replace(",", ".");
+        const parsed = Number(normalized);
+        if (Number.isFinite(parsed)) {
+          row.value = parsed;
+          row.label = value.toLowerCase().includes("incluso") ? "Incluso" : "";
+          updateTotals();
+        }
+      } else {
+        row[node.dataset.field] = value;
+      }
+      scheduleSave();
+    });
+  });
+
+  document.querySelectorAll("[data-schedule]").forEach((node) => {
+    node.addEventListener("input", () => {
+      const proposal = activeProposal();
+      const row = proposal.schedule.find((item) => item.id === node.dataset.schedule);
+      if (!row) return;
+      row[node.dataset.field] = node.innerText.trim();
+      scheduleSave();
+    });
+  });
+
+  document.querySelectorAll("[data-add-row]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const proposal = activeProposal();
+      proposal.investment[button.dataset.addRow].push({ id: uid(), item: "", description: "Nova linha", value: 0 });
+      scheduleSave();
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-delete-row]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const proposal = activeProposal();
+      const [kind, id] = button.dataset.deleteRow.split(":");
+      proposal.investment[kind] = proposal.investment[kind].filter((row) => row.id !== id);
+      scheduleSave();
+      render();
+    });
+  });
+
+  document.querySelector("[data-add-schedule]")?.addEventListener("click", () => {
+    const proposal = activeProposal();
+    proposal.schedule.push({ id: uid(), task: "Nova tarefa", responsible: "", start: "", end: "" });
+    scheduleSave();
+    render();
+  });
+
+  document.querySelectorAll("[data-delete-schedule]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const proposal = activeProposal();
+      proposal.schedule = proposal.schedule.filter((row) => row.id !== button.dataset.deleteSchedule);
+      scheduleSave();
+      render();
+    });
+  });
+}
+
+function updateTotals() {
+  const proposal = activeProposal();
+  if (!proposal) return;
+  const materialsTotal = total(proposal.investment.materials);
+  const servicesTotal = total(proposal.investment.services);
+  const materialsNode = document.querySelector('[data-total="materials"]');
+  const servicesNode = document.querySelector('[data-total="services"]');
+  const grandNode = document.querySelector("[data-grand-total]");
+  if (materialsNode) materialsNode.textContent = money.format(materialsTotal);
+  if (servicesNode) servicesNode.textContent = money.format(servicesTotal);
+  if (grandNode) grandNode.textContent = money.format(materialsTotal + servicesTotal);
 }
 
 await initStore();
