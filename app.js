@@ -490,6 +490,10 @@ function editableBlock(value, attrs, className = "editable block-edit") {
   return `<div class="${className}" contenteditable="true" spellcheck="true" ${attrs}>${escapeHtml(value)}</div>`;
 }
 
+function editableBlockFragment(value, key, index, className = "editable block-edit") {
+  return `<div class="${className}" contenteditable="true" spellcheck="true" data-block-fragment="${key}" data-fragment-index="${index}">${escapeHtml(value)}</div>`;
+}
+
 function bankGroups(value) {
   const groups = [];
   let current = [];
@@ -767,6 +771,60 @@ function chunkScheduleRows(rows, maxWeight = 10.8) {
   return chunks.length ? chunks : [[]];
 }
 
+function paragraphWeight(text) {
+  return Math.max(2, Math.ceil(String(text || "").length / 78) + 0.8);
+}
+
+function splitLongParagraph(text, maxWeight) {
+  const sentences = String(text || "")
+    .split(/(?<=[.!?])\s+/)
+    .filter(Boolean);
+
+  if (sentences.length <= 1) return [text];
+
+  const chunks = [];
+  let current = "";
+
+  sentences.forEach((sentence) => {
+    const candidate = current ? `${current} ${sentence}` : sentence;
+    if (current && paragraphWeight(candidate) > maxWeight) {
+      chunks.push(current);
+      current = sentence;
+    } else {
+      current = candidate;
+    }
+  });
+
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function chunkText(value, maxWeight = 22) {
+  const paragraphs = String(value || "")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .flatMap((paragraph) => (paragraphWeight(paragraph) > maxWeight ? splitLongParagraph(paragraph, maxWeight) : paragraph));
+
+  const chunks = [];
+  let current = [];
+  let weight = 0;
+
+  paragraphs.forEach((paragraph) => {
+    const nextWeight = paragraphWeight(paragraph);
+    if (current.length && weight + nextWeight > maxWeight) {
+      chunks.push(current.join("\n\n"));
+      current = [];
+      weight = 0;
+    }
+    current.push(paragraph);
+    weight += nextWeight;
+  });
+
+  if (current.length) chunks.push(current.join("\n\n"));
+  return chunks.length ? chunks : [""];
+}
+
 function renderSchedulePage(proposal, rows, pageIndex, pageCount) {
   const isFirstPage = pageIndex === 0;
   const isLastPage = pageIndex === pageCount - 1;
@@ -792,16 +850,6 @@ function renderSchedulePage(proposal, rows, pageIndex, pageCount) {
             : ""
         }
       </section>
-      ${
-        isLastPage
-          ? `
-            <section class="doc-section">
-              <h2>Garantias</h2>
-              ${editableBlock(proposal.blocks.guarantees, 'data-block="guarantees"')}
-            </section>
-          `
-          : ""
-      }
       ${docFoot()}
     </section>
   `;
@@ -810,6 +858,24 @@ function renderSchedulePage(proposal, rows, pageIndex, pageCount) {
 function renderSchedulePages(proposal) {
   return chunkScheduleRows(proposal.schedule || [])
     .map((rows, index, pages) => renderSchedulePage(proposal, rows, index, pages.length))
+    .join("");
+}
+
+function renderGuaranteesPages(proposal) {
+  return chunkText(proposal.blocks.guarantees)
+    .map(
+      (text, index) => `
+        <section class="page content-page" id="${index === 0 ? "garantias" : `garantias-pagina-${index + 1}`}">
+          ${pageBg()}
+          ${docTop(proposal)}
+          <section class="doc-section">
+            <h2>Garantias${index === 0 ? "" : " <small>continuação</small>"}</h2>
+            ${editableBlockFragment(text, "guarantees", index)}
+          </section>
+          ${docFoot()}
+        </section>
+      `
+    )
     .join("");
 }
 
@@ -945,6 +1011,8 @@ function renderDocument(proposal) {
 
         ${renderSchedulePages(proposal)}
 
+        ${renderGuaranteesPages(proposal)}
+
         <section class="page content-page" id="fechamento">
           ${pageBg()}
           ${docTop(proposal)}
@@ -1057,6 +1125,21 @@ function bind() {
         proposal.blocks[key] = node.innerText.trim();
       }
       markTouched(key === "scope" || key === "compliance" ? "escopo" : key === "scheduleNotes" ? "cronograma" : key === "payment" ? "fechamento" : "dados");
+      scheduleSave();
+    });
+  });
+
+  document.querySelectorAll("[data-block-fragment]").forEach((node) => {
+    node.addEventListener("input", () => {
+      pushHistory();
+      const proposal = activeProposal();
+      const key = node.dataset.blockFragment;
+      const fragments = [...document.querySelectorAll(`[data-block-fragment="${key}"]`)]
+        .sort((a, b) => Number(a.dataset.fragmentIndex) - Number(b.dataset.fragmentIndex))
+        .map((fragment) => fragment.innerText.trim())
+        .filter(Boolean);
+      proposal.blocks[key] = fragments.join("\n\n");
+      markTouched(key === "guarantees" ? "cronograma" : "dados");
       scheduleSave();
     });
   });
