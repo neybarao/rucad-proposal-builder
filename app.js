@@ -741,6 +741,78 @@ function renderScheduleRows(rows) {
     .join("");
 }
 
+function scheduleRowWeight(row) {
+  const taskLines = Math.ceil(String(row.task || "").length / 52);
+  const responsibleLines = Math.ceil(String(row.responsible || "").length / 20);
+  return Math.max(1.15, Math.max(taskLines, responsibleLines) * 1.15);
+}
+
+function chunkScheduleRows(rows, maxWeight = 10.8) {
+  const chunks = [];
+  let current = [];
+  let weight = 0;
+
+  rows.forEach((row) => {
+    const nextWeight = scheduleRowWeight(row);
+    if (current.length && weight + nextWeight > maxWeight) {
+      chunks.push(current);
+      current = [];
+      weight = 0;
+    }
+    current.push(row);
+    weight += nextWeight;
+  });
+
+  if (current.length) chunks.push(current);
+  return chunks.length ? chunks : [[]];
+}
+
+function renderSchedulePage(proposal, rows, pageIndex, pageCount) {
+  const isFirstPage = pageIndex === 0;
+  const isLastPage = pageIndex === pageCount - 1;
+
+  return `
+    <section class="page content-page">
+      ${pageBg()}
+      ${docTop(proposal)}
+      <section class="doc-section" id="${isFirstPage ? "cronograma" : `cronograma-pagina-${pageIndex + 1}`}">
+        <h2>Cronograma${isFirstPage ? "" : " <small>continuação</small>"}</h2>
+        <table class="doc-table schedule-table">
+          <thead>
+            <tr><th>Tarefa</th><th>Responsável</th><th>Início</th><th>Término</th><th class="row-tools"></th></tr>
+          </thead>
+          <tbody>${renderScheduleRows(rows)}</tbody>
+        </table>
+        ${
+          isLastPage
+            ? `
+              <button class="ghost-add" data-add-schedule>Adicionar linha no cronograma</button>
+              ${editableBlock(proposal.scheduleNotes, 'data-block="scheduleNotes"', "editable block-edit note-block")}
+            `
+            : ""
+        }
+      </section>
+      ${
+        isLastPage
+          ? `
+            <section class="doc-section">
+              <h2>Garantias</h2>
+              ${editableBlock(proposal.blocks.guarantees, 'data-block="guarantees"')}
+            </section>
+          `
+          : ""
+      }
+      ${docFoot()}
+    </section>
+  `;
+}
+
+function renderSchedulePages(proposal) {
+  return chunkScheduleRows(proposal.schedule || [])
+    .map((rows, index, pages) => renderSchedulePage(proposal, rows, index, pages.length))
+    .join("");
+}
+
 function renderInvestmentPages(proposal, grandTotal) {
   const tables = proposal.investment.tables || [];
   const tablePages = tables.flatMap((table, tableIndex) => {
@@ -871,26 +943,7 @@ function renderDocument(proposal) {
           ${docFoot()}
         </section>
 
-        <section class="page content-page">
-          ${pageBg()}
-          ${docTop(proposal)}
-          <section class="doc-section" id="cronograma">
-            <h2>Cronograma</h2>
-            <table class="doc-table schedule-table">
-              <thead>
-                <tr><th>Tarefa</th><th>Responsável</th><th>Início</th><th>Término</th><th class="row-tools"></th></tr>
-              </thead>
-              <tbody>${renderScheduleRows(proposal.schedule)}</tbody>
-            </table>
-            <button class="ghost-add" data-add-schedule>Adicionar linha no cronograma</button>
-            ${editableBlock(proposal.scheduleNotes, 'data-block="scheduleNotes"', "editable block-edit note-block")}
-          </section>
-          <section class="doc-section">
-            <h2>Garantias</h2>
-            ${editableBlock(proposal.blocks.guarantees, 'data-block="guarantees"')}
-          </section>
-          ${docFoot()}
-        </section>
+        ${renderSchedulePages(proposal)}
 
         <section class="page content-page" id="fechamento">
           ${pageBg()}
