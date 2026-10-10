@@ -701,11 +701,14 @@ function renderTablePage(table, index, pageRows, options) {
           ${pageRows
             .map(
               (row) => `
-                <tr data-row="${row.id}">
+                <tr data-investment-row="${table.id}:${row.id}" draggable="true">
                   <td>${editable(row.item || "", `data-table-id="${table.id}" data-row="${row.id}" data-field="item"`, "editable cell-edit")}</td>
                   <td>${editableBlock(row.description || "", `data-table-id="${table.id}" data-row="${row.id}" data-field="description"`, "editable cell-edit rich-cell")}</td>
                   <td class="money-cell">${editable(currencyInput(row.value, row.label), `data-table-id="${table.id}" data-row="${row.id}" data-field="value"`, "editable cell-edit money-edit")}</td>
-                  <td class="row-tools"><button class="icon-btn" data-delete-row="${table.id}:${row.id}" title="Remover linha">×</button></td>
+                  <td class="row-tools schedule-tools">
+                    <span class="drag-handle" data-drag-row="${table.id}:${row.id}" title="Reordenar linha" draggable="true">⋮⋮</span>
+                    <button class="icon-btn" data-delete-row="${table.id}:${row.id}" title="Remover linha">×</button>
+                  </td>
                 </tr>
               `
             )
@@ -1350,6 +1353,62 @@ function bind() {
     });
   });
 
+  document.querySelectorAll("[data-investment-row]").forEach((rowNode) => {
+    rowNode.addEventListener("dragstart", (event) => {
+      if (!event.target.closest("[data-drag-row]")) {
+        event.preventDefault();
+        return;
+      }
+      rowNode.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", rowNode.dataset.investmentRow);
+    });
+
+    rowNode.addEventListener("dragend", () => {
+      rowNode.classList.remove("dragging");
+      document.querySelectorAll(".drop-target").forEach((target) => target.classList.remove("drop-target"));
+    });
+
+    rowNode.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      const draggedKey = event.dataTransfer.getData("text/plain");
+      const [draggedTableId, draggedRowId] = draggedKey.split(":");
+      const [targetTableId, targetRowId] = rowNode.dataset.investmentRow.split(":");
+      if (draggedTableId === targetTableId && draggedRowId !== targetRowId) {
+        rowNode.classList.add("drop-target");
+      }
+    });
+
+    rowNode.addEventListener("dragleave", () => {
+      rowNode.classList.remove("drop-target");
+    });
+
+    rowNode.addEventListener("drop", (event) => {
+      event.preventDefault();
+      rowNode.classList.remove("drop-target");
+      const draggedKey = event.dataTransfer.getData("text/plain");
+      const targetKey = rowNode.dataset.investmentRow;
+      if (!draggedKey || draggedKey === targetKey) return;
+      const [draggedTableId, draggedRowId] = draggedKey.split(":");
+      const [targetTableId, targetRowId] = targetKey.split(":");
+      if (draggedTableId !== targetTableId) return;
+      const proposal = activeProposal();
+      const table = proposal.investment.tables.find((item) => item.id === draggedTableId);
+      if (!table) return;
+      const fromIndex = table.rows.findIndex((row) => row.id === draggedRowId);
+      const toIndex = table.rows.findIndex((row) => row.id === targetRowId);
+      if (fromIndex < 0 || toIndex < 0) return;
+      pushHistory();
+      const [moved] = table.rows.splice(fromIndex, 1);
+      const targetIndex = table.rows.findIndex((row) => row.id === targetRowId);
+      table.rows.splice(targetIndex, 0, moved);
+      renumberTableRows(table);
+      markTouched("investimento");
+      scheduleSave();
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-schedule]").forEach((node) => {
     node.addEventListener("input", () => {
       pushHistory();
@@ -1435,6 +1494,7 @@ function bind() {
       if (!table) return;
       pushHistory();
       table.rows = table.rows.filter((row) => row.id !== rowId);
+      renumberTableRows(table);
       markTouched("investimento");
       scheduleSave();
       render();
@@ -1495,6 +1555,13 @@ function updateTotals() {
   });
   const grandNode = document.querySelector("[data-grand-total]");
   if (grandNode) grandNode.textContent = money.format(investmentTotal(proposal.investment.tables));
+}
+
+function renumberTableRows(table) {
+  if (!table?.rows?.every((row) => /^\d+$/.test(String(row.item || "").trim()))) return;
+  table.rows.forEach((row, index) => {
+    row.item = String(index + 1);
+  });
 }
 
 document.addEventListener("keydown", async (event) => {
